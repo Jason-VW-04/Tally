@@ -1,0 +1,1895 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tally</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tally">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+/* Layout: iOS-style grouped screens, five tabs fixed at the bottom, editors slide up as sheets.
+   On wide screens the Overview splits into two columns. */
+:root {
+  color-scheme: light;
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --fg: #111114;
+  --fg2: #6A6A72;
+  --sep: rgba(60, 60, 67, 0.16);
+  --fill: rgba(118, 118, 128, 0.12);
+  --track: #E5E5EA;
+  --accent: #1E906B;
+  --on-accent: #FFFFFF;
+  --good: #1E9A52;
+  --warn: #C76A00;
+  --bad: #D7362B;
+  --bar: rgba(249, 249, 251, 0.94);
+  --scrim: rgba(0, 0, 0, 0.35);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+  --round: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #000000;
+    --card: #1C1C1E;
+    --fg: #F5F5F7;
+    --fg2: #9C9CA4;
+    --sep: rgba(120, 120, 128, 0.36);
+    --fill: rgba(118, 118, 128, 0.24);
+    --track: #2C2C2E;
+    --accent: #42C79C;
+    --on-accent: #04281D;
+    --good: #30D158;
+    --warn: #FF9F0A;
+    --bad: #FF5A4F;
+    --bar: rgba(22, 22, 24, 0.94);
+    --scrim: rgba(0, 0, 0, 0.6);
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.35 var(--font); overscroll-behavior-y: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+button:disabled { cursor: default; }
+input, select, textarea { font: inherit; color: inherit; }
+button:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+svg.ic { width: 1em; height: 1em; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#view {
+  max-width: 600px; margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + 96px);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-top: 8px; }
+h1 { font-size: 32px; line-height: 1.15; font-weight: 700; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.back { display: inline-flex; align-items: center; gap: 2px; color: var(--accent); font-size: 17px; margin-left: -6px; padding: 6px 6px 0 0; }
+.back svg { font-size: 24px; }
+.round-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--accent); background: var(--fill); font-size: 20px; flex: none; }
+.round-btn:disabled { opacity: 0.3; }
+.sync-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg2); background: var(--fill); padding: 5px 10px; border-radius: 14px; flex: none; }
+.sync-pill svg { font-size: 15px; }
+
+.card { background: var(--card); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { font-size: 17px; font-weight: 600; margin: 0; }
+.muted { color: var(--fg2); }
+.small { font-size: 15px; }
+.foot { font-size: 13px; }
+.sec-head { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg2); padding: 0 16px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.sec-head button { text-transform: none; letter-spacing: 0; color: var(--accent); font-size: 15px; }
+.sec-foot { font-size: 13px; color: var(--fg2); padding: 0 16px; }
+.section { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.group { background: var(--card); border-radius: 14px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 11px 16px; min-height: 48px; width: 100%; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--sep); }
+.row.with-icon + .row.with-icon::before { left: 58px; }
+.row .grow { flex: 1; min-width: 0; }
+.row .grow > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .grow > div.foot { white-space: normal; }
+.row .val { color: var(--fg2); flex: none; text-align: right; }
+.row .amt { flex: none; text-align: right; }
+.row .chev { color: var(--fg2); opacity: 0.6; font-size: 18px; flex: none; }
+.row.link { color: var(--accent); }
+.row.danger { color: var(--bad); justify-content: center; }
+button.row:active, button.catline:active { background: var(--fill); }
+.row input[type=text], .row input[type=email], .row input[type=password], .row input[type=date], .row input[type=search], .row select { background: transparent; border: 0; min-width: 0; padding: 4px 0; }
+.row input:focus { outline: none; }
+.row input.right { text-align: right; width: 120px; flex: none; }
+.row input.wide { flex: 1; width: 100%; }
+.row select { text-align: right; text-align-last: right; color: var(--fg2); max-width: 62%; }
+.row:focus-within { box-shadow: inset 3px 0 0 var(--accent); }
+.pos { color: var(--good); }
+.neg, .s-bad { color: var(--bad); }
+.s-good { color: var(--good); } .s-warn { color: var(--warn); }
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; background: var(--fill); color: var(--fg2); vertical-align: middle; }
+.badge svg { font-size: 11px; }
+
+.cat-ic { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 17px; flex: none; }
+.cat-ic.s { width: 30px; height: 30px; font-size: 15px; }
+.cat-ic.m { width: 32px; height: 32px; font-size: 16px; }
+
+/* Summary */
+.big { font: 700 46px/1.05 var(--round); letter-spacing: -0.01em; }
+.big.over { color: var(--bad); }
+.meter { position: relative; height: 20px; }
+.meter .track { position: absolute; left: 0; right: 0; top: 4px; height: 12px; border-radius: 6px; background: var(--track); overflow: hidden; }
+.meter .fillbar { height: 100%; border-radius: 6px; }
+.meter .tick { position: absolute; top: 0; width: 2px; height: 20px; margin-left: -1px; border-radius: 1px; background: var(--fg); }
+.thin { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.thin > div { height: 100%; border-radius: 3px; }
+.split { display: flex; justify-content: space-between; gap: 12px; }
+.rule { border: 0; border-top: 1px solid var(--sep); margin: 0; }
+.status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.status svg { font-size: 20px; }
+.kv { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.kv b { font-weight: 600; }
+details.calc { border-top: 1px solid var(--sep); padding-top: 10px; }
+details.calc summary { color: var(--accent); font-size: 15px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 4px; }
+details.calc summary::-webkit-details-marker { display: none; }
+details.calc[open] summary svg { transform: rotate(90deg); }
+.calc-body { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; font-size: 14px; }
+.calc-body .kv { font-size: 14px; }
+.calc-body .tot { border-top: 1px solid var(--sep); padding-top: 6px; font-weight: 600; }
+.calc-body .ind { padding-left: 12px; color: var(--fg2); }
+
+.primary, .secondary { border-radius: 14px; padding: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.primary { background: var(--accent); color: var(--on-accent); }
+.secondary { background: var(--card); color: var(--accent); }
+.primary:active, .secondary:active { opacity: 0.8; }
+.primary svg, .secondary svg { font-size: 20px; }
+.primary:disabled { opacity: 0.45; }
+.btn-col { display: flex; flex-direction: column; gap: 10px; }
+
+.donut { position: relative; width: 210px; max-width: 100%; margin: 4px auto; }
+.donut svg { display: block; width: 100%; height: auto; }
+.donut .mid { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.donut .mid b { font: 700 24px/1.1 var(--round); }
+.catline { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 8px; margin: 0 -8px; border-radius: 12px; width: calc(100% + 16px); }
+.catline .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.catline .name { font-weight: 500; }
+.catline .cap { font-size: 12px; color: var(--fg2); }
+.catline .cap.over { color: var(--bad); }
+
+/* History chart */
+.bars { position: relative; height: 190px; display: flex; align-items: flex-end; gap: 10px; padding-top: 22px; }
+.bars .col { position: relative; flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+.bars .bar { width: 100%; max-width: 44px; border-radius: 6px 6px 2px 2px; background: var(--accent); min-height: 2px; }
+.bars .bar.over { background: var(--bad); }
+.bars .lab { font-size: 12px; color: var(--fg2); height: 16px; }
+.bars .goal { position: absolute; left: 50%; width: min(100%, 56px); transform: translateX(-50%); border-top: 2px dashed var(--fg2); pointer-events: none; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: var(--fg2); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--accent); }
+.legend i.o { background: var(--bad); }
+.legend i.g { height: 0; border-top: 2px dashed var(--fg2); border-radius: 0; background: none; width: 16px; }
+
+/* Spending search and filters */
+.search { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 12px; padding: 8px 12px; }
+.search svg { color: var(--fg2); font-size: 17px; }
+.search input { border: 0; background: transparent; flex: 1; min-width: 0; font-size: 17px; }
+.search input:focus { outline: none; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filters select { appearance: none; -webkit-appearance: none; background: var(--card); border: 1px solid var(--sep); border-radius: 18px; padding: 7px 14px; font-size: 14px; color: var(--fg); max-width: 100%; }
+.filters select.on { border-color: var(--accent); color: var(--accent); }
+.filters button { font-size: 14px; color: var(--accent); padding: 7px 4px; }
+.result-line { font-size: 14px; color: var(--fg2); padding: 0 4px; }
+
+.monthnav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.monthnav b { font-size: 17px; font-weight: 600; }
+
+.empty { text-align: center; color: var(--fg2); padding: 48px 16px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.empty b { color: var(--fg); font-size: 20px; }
+.hint { background: var(--card); border-radius: 14px; padding: 12px 14px; font-size: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.hint > div { flex: 1; }
+.hint button.x { color: var(--fg2); font-size: 18px; padding: 2px; }
+.hint button.go { color: var(--accent); font-weight: 600; }
+
+/* Tab bar */
+#tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: space-around;
+  background: var(--bar); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--sep); padding: 6px 8px calc(env(safe-area-inset-bottom, 0px) + 6px);
+}
+#tabs button { flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; font-weight: 500; color: var(--fg2); padding: 4px 0; }
+#tabs button svg { font-size: 24px; }
+#tabs button[aria-current=page] { color: var(--accent); }
+
+/* Sheet */
+#sheet { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: flex-end; background: var(--scrim); }
+.panel {
+  background: var(--bg); border-radius: 16px 16px 0 0; width: 100%; max-width: 600px; margin: 0 auto;
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - 24px); display: flex; flex-direction: column; animation: up 0.24s ease-out;
+}
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
+.panel header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px 10px; }
+.panel header b { font-weight: 600; text-align: center; }
+.panel header button { color: var(--accent); min-width: 64px; padding: 4px 0; }
+.panel header button.save { font-weight: 600; text-align: right; }
+.panel header button:disabled { color: var(--fg2); opacity: 0.5; }
+.panel .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 16px calc(env(safe-area-inset-bottom, 0px) + 24px); display: flex; flex-direction: column; gap: 16px; }
+.amount { display: flex; align-items: baseline; gap: 4px; padding: 8px 16px; }
+.amount span { font: 600 28px var(--round); color: var(--fg2); }
+.amount input { font: 700 44px/1.1 var(--round); border: 0; background: transparent; width: 100%; min-width: 0; padding: 0; }
+.amount input:focus { outline: none; }
+.amount.refund input, .amount.refund span { color: var(--good); }
+.err { color: var(--bad); font-size: 13px; padding: 0 16px; }
+.seg { display: flex; background: var(--fill); border-radius: 10px; padding: 2px; }
+.seg button { flex: 1; text-align: center; padding: 7px; border-radius: 8px; font-size: 15px; font-weight: 500; }
+.seg button[aria-checked=true] { background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; padding: 12px; }
+.chip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; background: var(--fill); border: 2px solid transparent; font-size: 12px; font-weight: 500; text-align: center; min-width: 0; }
+.chip span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip[aria-checked=true] { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); }
+.split-row { display: grid; grid-template-columns: minmax(0, 1fr) 104px 32px; gap: 8px; align-items: center; padding: 8px 12px 8px 16px; position: relative; }
+.split-row + .split-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--sep); }
+.split-row select { background: transparent; border: 0; min-width: 0; padding: 6px 0; }
+.split-row input { border: 0; background: var(--fill); border-radius: 8px; padding: 6px 8px; text-align: right; width: 100%; }
+.split-row button { color: var(--fg2); font-size: 18px; display: grid; place-items: center; height: 32px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 12px; padding: 14px; justify-items: center; }
+.swatch { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 18px; }
+.icon-pick { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: var(--fill); }
+.icon-pick[aria-checked=true] { background: var(--c); color: #fff; }
+.switch { appearance: none; -webkit-appearance: none; width: 51px; height: 31px; border-radius: 16px; background: var(--track); position: relative; flex: none; transition: background 0.2s; margin: 0; cursor: pointer; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s; }
+.switch:checked { background: var(--good); }
+.switch:checked::after { transform: translateX(20px); }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.verdict { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; font-size: 17px; }
+.verdict svg { font-size: 22px; margin-top: 1px; }
+
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 20; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 20px; font-size: 14px; max-width: calc(100% - 32px); display: flex; gap: 14px; align-items: center; }
+#toast button { color: var(--bg); font-weight: 700; text-decoration: underline; }
+
+@media (min-width: 900px) {
+  #view.wide { max-width: 1040px; }
+  .ov { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .ov > div { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+}
+@media (max-width: 899px) { .ov, .ov > div { display: flex; flex-direction: column; gap: 16px; } }
+</style>
+</head>
+<body>
+<main id="view"></main>
+<nav id="tabs" aria-label="Sections"></nav>
+<div id="sheet" hidden></div>
+<div id="toast" role="status" hidden></div>
+<input type="file" id="restore-file" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+const ICONS = {"cart": "<path d=\"m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18\"/><path d=\"M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25\"/><circle cx=\"18\" cy=\"20\" r=\"2\"/><circle cx=\"8\" cy=\"20\" r=\"2\"/>", "utensils": "<path d=\"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\"/><path d=\"M7 2v20\"/><path d=\"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7\"/>", "film": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M7 3v18\"/><path d=\"M3 7.5h4\"/><path d=\"M3 12h18\"/><path d=\"M3 16.5h4\"/><path d=\"M17 3v18\"/><path d=\"M17 7.5h4\"/><path d=\"M17 16.5h4\"/>", "fuel": "<path d=\"M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5\"/><path d=\"M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16\"/><path d=\"M2 21h13\"/><path d=\"M3 9h11\"/>", "bag": "<path d=\"M16 10a4 4 0 0 1-8 0\"/><path d=\"M3.103 6.034h17.794\"/><path d=\"M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z\"/>", "grid": "<rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/>", "coffee": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "house": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>", "car": "<path d=\"M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/>", "gamepad": "<line x1=\"6\" x2=\"10\" y1=\"11\" y2=\"11\"/><line x1=\"8\" x2=\"8\" y1=\"9\" y2=\"13\"/><line x1=\"15\" x2=\"15.01\" y1=\"12\" y2=\"12\"/><line x1=\"18\" x2=\"18.01\" y1=\"10\" y2=\"10\"/><path d=\"M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z\"/>", "plane": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "gift": "<path d=\"M12 7v14\"/><path d=\"M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8\"/><path d=\"M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5\"/><rect x=\"3\" y=\"7\" width=\"18\" height=\"4\" rx=\"1\"/>", "heart": "<path d=\"M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5\"/>", "dumbbell": "<path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"/><path d=\"m2.5 21.5 1.4-1.4\"/><path d=\"m20.1 3.9 1.4-1.4\"/><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"/><path d=\"m9.6 14.4 4.8-4.8\"/>", "book": "<path d=\"M12 5v16\"/><path d=\"M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z\"/>", "paw": "<circle cx=\"11\" cy=\"4\" r=\"2\"/><circle cx=\"18\" cy=\"8\" r=\"2\"/><circle cx=\"20\" cy=\"16\" r=\"2\"/><path d=\"M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z\"/>", "shirt": "<path d=\"M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z\"/>", "music": "<path d=\"M9 18V5l12-2v13\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><circle cx=\"18\" cy=\"16\" r=\"3\"/>", "card": "<rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><line x1=\"2\" x2=\"22\" y1=\"10\" y2=\"10\"/><path d=\"M6 14h2\"/>", "wrench": "<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z\"/>", "medical": "<path d=\"M12 11v4\"/><path d=\"M14 13h-4\"/><path d=\"M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2\"/><path d=\"M18 6v14\"/><path d=\"M6 6v14\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/>", "sparkles": "<path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"/><path d=\"M20 2v4\"/><path d=\"M22 4h-4\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/>", "ticket": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "zap": "<path d=\"M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z\"/>", "plus": "<path d=\"M5 12h14\"/><path d=\"M12 5v14\"/>", "pie": "<path d=\"M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z\"/><path d=\"M21.21 15.89A10 10 0 1 1 8 2.83\"/>", "list": "<path d=\"M3 5h.01\"/><path d=\"M3 12h.01\"/><path d=\"M3 19h.01\"/><path d=\"M8 5h13\"/><path d=\"M8 12h13\"/><path d=\"M8 19h13\"/>", "bars": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "settings": "<path d=\"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "repeat": "<path d=\"m17 2 4 4-4 4\"/><path d=\"M3 11v-1a4 4 0 0 1 4-4h14\"/><path d=\"m7 22-4-4 4-4\"/><path d=\"M21 13v1a4 4 0 0 1-4 4H3\"/>", "right": "<path d=\"m9 18 6-6-6-6\"/>", "left": "<path d=\"m15 18-6-6 6-6\"/>", "up": "<path d=\"m18 15-6-6-6 6\"/>", "down": "<path d=\"m6 9 6 6 6-6\"/>", "check": "<path d=\"M20 6 9 17l-5-5\"/>", "ok": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m16 9-5.5 5.5L8 12\"/>", "alert": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\"/><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\"/>", "stop": "<path d=\"m15 9-6 6\"/><path d=\"M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z\"/><path d=\"m9 9 6 6\"/>", "x": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "download": "<path d=\"M12 15V3\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/>", "upload": "<path d=\"M12 3v12\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/>", "help": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"/><path d=\"M12 17h.01\"/>", "target": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/>", "calculator": "<rect width=\"16\" height=\"20\" x=\"4\" y=\"2\" rx=\"2\"/><line x1=\"8\" x2=\"16\" y1=\"6\" y2=\"6\"/><line x1=\"16\" x2=\"16\" y1=\"14\" y2=\"18\"/><path d=\"M16 10h.01\"/><path d=\"M12 10h.01\"/><path d=\"M8 10h.01\"/><path d=\"M12 14h.01\"/><path d=\"M8 14h.01\"/><path d=\"M12 18h.01\"/><path d=\"M8 18h.01\"/>", "search": "<path d=\"m21 21-4.34-4.34\"/><circle cx=\"11\" cy=\"11\" r=\"8\"/>", "split": "<path d=\"M16 3h5v5\"/><path d=\"M8 3H3v5\"/><path d=\"M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3\"/><path d=\"m15 9 6-6\"/>", "swap": "<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>", "rotate": "<path d=\"M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/>", "cloud": "<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>", "cloud-off": "<path d=\"M10.94 5.274A7 7 0 0 1 15.71 10h1.79a4.5 4.5 0 0 1 4.222 6.057\"/><path d=\"M18.796 18.81A4.5 4.5 0 0 1 17.5 19H9A7 7 0 0 1 5.79 5.78\"/><path d=\"m2 2 20 20\"/>", "refresh": "<path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M8 16H3v5\"/>", "logout": "<path d=\"m16 17 5-5-5-5\"/><path d=\"M21 12H9\"/><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"/>", "sheet": "<path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"/><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"/><path d=\"M8 13h2\"/><path d=\"M14 13h2\"/><path d=\"M8 17h2\"/><path d=\"M14 17h2\"/>", "skip": "<path d=\"M21 4v16\"/><path d=\"M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z\"/>"};
+const FIREBASE_CONFIG = {"apiKey":"AIzaSyC6UKIh9r9hvetFo-jAkOj9pXVKyYQJXWI","authDomain":"tally-e419b.firebaseapp.com","projectId":"tally-e419b","storageBucket":"tally-e419b.firebasestorage.app","messagingSenderId":"397263107109","appId":"1:397263107109:web:47b05d0a13c3ccda503bcc"};
+const APP_VERSION = '2.0';
+const SCHEMA = 2;
+
+// =====================================================================
+// Basics
+// =====================================================================
+const PALETTE = [['#2E9E6B', 'Green'], ['#E8833A', 'Orange'], ['#8E5BD9', 'Purple'], ['#2F80ED', 'Blue'], ['#D9508F', 'Pink'],
+  ['#17A2A2', 'Teal'], ['#C98A00', 'Gold'], ['#5C6BC0', 'Indigo'], ['#8D6E63', 'Brown'], ['#6B7A85', 'Gray']];
+const CAT_ICONS = [['cart', 'Cart'], ['utensils', 'Fork and knife'], ['film', 'Film'], ['fuel', 'Fuel pump'], ['bag', 'Shopping bag'],
+  ['grid', 'Grid'], ['coffee', 'Coffee'], ['house', 'House'], ['car', 'Car'], ['gamepad', 'Game controller'], ['plane', 'Plane'],
+  ['gift', 'Gift'], ['heart', 'Heart'], ['dumbbell', 'Dumbbell'], ['book', 'Book'], ['paw', 'Paw'], ['shirt', 'Shirt'],
+  ['music', 'Music'], ['card', 'Card'], ['wrench', 'Wrench'], ['medical', 'Medical kit'], ['sparkles', 'Sparkles'],
+  ['ticket', 'Ticket'], ['zap', 'Lightning']];
+const DEFAULT_CATS = [['Groceries', 'cart', '#2E9E6B', 25000], ['Eating out', 'utensils', '#E8833A', 15000],
+  ['Entertainment', 'film', '#8E5BD9', 10000], ['Gas', 'fuel', '#2F80ED', 12000], ['Shopping', 'bag', '#D9508F', 10000],
+  ['Misc', 'grid', '#6B7A85', 8000]];
+const UNKNOWN = { id: 'unknown', name: 'Uncategorized', icon: 'help', color: '#6B7A85', limit: null, archived: true, rollover: false };
+const CADENCES = [['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['twicemonthly', 'Twice a month'], ['monthly', 'Monthly'], ['yearly', 'Yearly']];
+
+const $ = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const icon = name => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.help}</svg>`;
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+const sum = (list, f) => list.reduce((a, x) => a + f(x), 0);
+const clamp01 = v => (Number.isFinite(v) ? Math.min(Math.max(v, 0), 1) : 0);
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k);
+
+// ---------- Dates (date-only strings, calendar math in UTC so DST never shifts a day) ----------
+const pad = n => String(n).padStart(2, '0');
+const ymdLocal = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const nowDate = () => (window.__TALLY_NOW__ ? new Date(window.__TALLY_NOW__) : new Date());
+const today = () => ymdLocal(nowDate());
+const curMonth = () => today().slice(0, 7);
+const nums = s => s.split('-').map(Number);
+const toUTC = ds => { const [y, m, d] = nums(ds); return Date.UTC(y, m - 1, d); };
+const fromUTC = t => { const d = new Date(t); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; };
+const addDays = (ds, n) => fromUTC(toUTC(ds) + n * 86400000);
+const daysBetween = (a, b) => Math.round((toUTC(b) - toUTC(a)) / 86400000);
+const daysIn = ym => { const [y, m] = nums(ym); return new Date(Date.UTC(y, m, 0)).getUTCDate(); };
+const monthOf = ds => ds.slice(0, 7);
+const nextMonth = ym => { let [y, m] = nums(ym); m += 1; if (m > 12) { m = 1; y += 1; } return `${y}-${pad(m)}`; };
+const prevMonth = ym => { let [y, m] = nums(ym); m -= 1; if (m < 1) { m = 12; y -= 1; } return `${y}-${pad(m)}`; };
+function monthRange(a, b) { const out = []; let m = a; while (m <= b && out.length < 600) { out.push(m); m = nextMonth(m); } return out; }
+const isDate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && fromUTC(toUTC(s)) === s;
+const isMonth = s => typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
+const fmtDate = (ds, opts) => { const [y, m, d] = nums(ds); return new Date(y, m - 1, d).toLocaleDateString('en-US', opts); };
+const monthTitle = ym => fmtDate(ym + '-01', { month: 'long', year: 'numeric' });
+const monthShort = ym => fmtDate(ym + '-01', { month: 'short' });
+const shortDate = ds => fmtDate(ds, ds.slice(0, 4) === today().slice(0, 4) ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+const dayTitle = ds => fmtDate(ds, ds.slice(0, 4) === today().slice(0, 4) ? { weekday: 'long', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+const ordinal = n => { const t = n % 100; if (t >= 11 && t <= 13) return n + 'th'; return n + (['th', 'st', 'nd', 'rd'][n % 10] || 'th'); };
+
+// ---------- Money (whole cents everywhere) ----------
+const fmtCur = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+const fmtWhole = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const money = c => fmtCur.format(c / 100);
+const whole = c => fmtWhole.format(Math.round(c / 100));
+const floorWhole = c => fmtWhole.format(Math.floor(c / 100));
+const editable = c => (c % 100 === 0 ? String(c / 100) : (c / 100).toFixed(2));
+const MAX_CENTS = 100000000;
+function parseCents(text) {
+  let s = String(text == null ? '' : text).trim().replace(/[$\s]/g, '');
+  if (!s) return { empty: true };
+  if (s.startsWith('-')) return { error: 'Enter the amount without a minus sign. For money back, choose Refund.' };
+  if (/^\d+,\d{1,2}$/.test(s)) s = s.replace(',', '.'); else s = s.replace(/,/g, '');
+  if (!/^\d*\.?\d*$/.test(s) || s === '.') return { error: 'Enter an amount like 12.50.' };
+  const [i, f = ''] = s.split('.');
+  if (f.length > 2) return { error: 'Use at most 2 decimal places.' };
+  const cents = Number(i || '0') * 100 + Number((f + '00').slice(0, 2));
+  if (!(cents > 0)) return { error: 'Enter an amount above $0.' };
+  if (cents > MAX_CENTS) return { error: 'That amount is above the $1,000,000 limit.' };
+  return { cents };
+}
+
+// =====================================================================
+// Saved data
+// =====================================================================
+const K2 = 'tally-data-v2', K1 = 'tally-data-v1', KMETA = 'tally-meta';
+let storageOK = true;
+const disk = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { storageOK = false; return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { storageOK = false; return false; } }
+};
+const META_DEFAULTS = { lastBackupAt: null, changesSinceBackup: 0, hintOff: false, syncUid: null, lastUid: null, lastSyncedAt: null };
+let meta = (() => { try { return Object.assign({}, META_DEFAULTS, JSON.parse(disk.get(KMETA) || '{}')); } catch (e) { return Object.assign({}, META_DEFAULTS); } })();
+const saveMeta = () => disk.set(KMETA, JSON.stringify(meta));
+
+function freshState() {
+  const t = today(), stamp = Date.now();
+  const categories = {};
+  DEFAULT_CATS.forEach(([name, ic, color, limit], i) => {
+    const id = uid();
+    categories[id] = { id, name, icon: ic, color, order: i, archived: false, rollover: false, rolloverFrom: null, limit, createdMonth: null, updatedAt: stamp };
+  });
+  return { settings: { id: 'settings', schema: SCHEMA, defaultBudget: 80000, trackingStart: t, updatedAt: stamp }, categories, plans: {}, recurring: {}, entries: {} };
+}
+
+// Cleans any loaded or restored data. Returns the state plus a count of records that had to be dropped.
+function normalizeState(d, opts) {
+  opts = opts || {};
+  const dropped = { entries: 0, recurring: 0, plans: 0, categories: 0 };
+  const src = d && typeof d === 'object' ? d : {};
+  const settingsIn = src.settings && typeof src.settings === 'object' ? src.settings : {};
+  const settings = {
+    id: 'settings', schema: SCHEMA,
+    defaultBudget: Number.isInteger(settingsIn.defaultBudget) && settingsIn.defaultBudget > 0 ? settingsIn.defaultBudget : 80000,
+    trackingStart: isDate(settingsIn.trackingStart) ? settingsIn.trackingStart : today(),
+    updatedAt: settingsIn.updatedAt || 0
+  };
+  const categories = {};
+  for (const [id, c] of Object.entries(src.categories || {})) {
+    if (!c || typeof c.name !== 'string' || !c.name.trim()) { dropped.categories++; continue; }
+    categories[id] = {
+      id, name: c.name.trim().slice(0, 40), icon: ICONS[c.icon] ? c.icon : 'grid', color: /^#[0-9A-Fa-f]{6}$/.test(c.color) ? c.color : '#6B7A85',
+      order: Number.isFinite(c.order) ? c.order : 99, archived: !!c.archived, rollover: !!c.rollover,
+      rolloverFrom: isMonth(c.rolloverFrom) ? c.rolloverFrom : null,
+      limit: Number.isInteger(c.limit) && c.limit >= 0 ? c.limit : null,
+      createdMonth: isMonth(c.createdMonth) ? c.createdMonth : null, updatedAt: c.updatedAt || 0
+    };
+  }
+  const plans = {};
+  for (const [m, p] of Object.entries(src.plans || {})) {
+    if (!isMonth(m) || !p || !Number.isInteger(p.total) || p.total < 0) { dropped.plans++; continue; }
+    const limits = {};
+    for (const [k, v] of Object.entries(p.limits || {})) if (v === null || (Number.isInteger(v) && v >= 0)) limits[k] = v;
+    plans[m] = { month: m, total: p.total, limits, moves: Array.isArray(p.moves) ? p.moves.slice(-200) : [], legacyLimits: !!p.legacyLimits, updatedAt: p.updatedAt || 0 };
+  }
+  const recurring = {};
+  for (const [id, r] of Object.entries(src.recurring || {})) {
+    const cad = CADENCES.some(c => c[0] === r?.cadence) ? r.cadence : null;
+    if (!r || !cad || !isDate(r.anchor) || !Number.isInteger(r.amount) || r.amount <= 0 || r.amount > MAX_CENTS || typeof r.categoryId !== 'string') { dropped.recurring++; continue; }
+    const day = Number.isInteger(r.day) && r.day >= 1 && r.day <= 31 ? r.day : nums(r.anchor)[2];
+    recurring[id] = {
+      id, name: String(r.name || 'Recurring').slice(0, 60), amount: r.amount, categoryId: r.categoryId, cadence: cad, anchor: r.anchor, day,
+      day2: Number.isInteger(r.day2) && r.day2 >= 1 && r.day2 <= 31 ? r.day2 : null,
+      endDate: isDate(r.endDate) ? r.endDate : null, paused: !!r.paused,
+      skipped: Array.isArray(r.skipped) ? r.skipped.filter(isDate).slice(-100) : [],
+      postedThrough: isDate(r.postedThrough) ? r.postedThrough : null, updatedAt: r.updatedAt || 0
+    };
+  }
+  const entries = {};
+  for (const [id, e] of Object.entries(src.entries || {})) {
+    if (!e || !isDate(e.date) || !Number.isInteger(e.amount) || e.amount <= 0 || e.amount > MAX_CENTS) { dropped.entries++; continue; }
+    let parts = Array.isArray(e.parts) ? e.parts.filter(p => p && typeof p.categoryId === 'string' && Number.isInteger(p.amount) && p.amount > 0) : [];
+    if (!parts.length || sum(parts, p => p.amount) !== e.amount) {
+      if (typeof e.categoryId === 'string') parts = [{ categoryId: e.categoryId, amount: e.amount }];
+      else if (parts.length) parts = [{ categoryId: parts[0].categoryId, amount: e.amount }];
+      else { dropped.entries++; continue; }
+    }
+    entries[id] = {
+      id, type: e.type === 'refund' ? 'refund' : 'expense', date: e.date, amount: e.amount,
+      parts: parts.map(p => ({ categoryId: p.categoryId, amount: p.amount })),
+      note: String(e.note || '').slice(0, 120), recurringId: typeof e.recurringId === 'string' ? e.recurringId : null,
+      ts: Number(e.ts) || 0, updatedAt: e.updatedAt || 0
+    };
+  }
+  if (!Object.keys(categories).length && opts.fill !== false) Object.assign(categories, freshState().categories);
+  return { state: { settings, categories, plans, recurring, entries }, dropped };
+}
+
+// Converts the first web version's data. Past months' category limits were never saved by that version,
+// so months before this one are marked as using today's limits.
+function migrateV1(d) {
+  const cm = curMonth(), stamp = Date.now();
+  const cents = v => Math.round(Number(v) * 100);
+  const categories = {};
+  (d.categories || []).forEach((c, i) => {
+    if (!c || !c.id) return;
+    categories[c.id] = { id: c.id, name: c.name, icon: c.icon, color: c.color, order: i, archived: !!c.archived, rollover: false, rolloverFrom: null,
+      limit: Number(c.limit) > 0 ? cents(c.limit) : null, createdMonth: null, updatedAt: stamp };
+  });
+  const entries = {};
+  for (const e of d.expenses || []) {
+    if (!e || !e.id || !isDate(e.date) || !(Number(e.amount) > 0)) continue;
+    const c = cents(e.amount);
+    entries[e.id] = { id: e.id, type: 'expense', date: e.date, amount: c, parts: [{ categoryId: e.categoryId, amount: c }], note: e.note || '',
+      recurringId: e.recurringId || null, ts: Number(e.ts) || 0, updatedAt: stamp };
+  }
+  const dates = Object.values(entries).map(e => e.date).sort();
+  const trackingStart = dates.length && dates[0] < today() ? dates[0] : today();
+  const recurring = {};
+  for (const r of d.recurring || []) {
+    if (!r || !r.id || !isMonth(r.startMonth)) continue;
+    const day = Math.min(Math.max(Number(r.day) || 1, 1), 31);
+    const at = ym => `${ym}-${pad(Math.min(day, daysIn(ym)))}`;
+    const anchor = at(r.startMonth);
+    recurring[r.id] = { id: r.id, name: r.name, amount: cents(r.amount), categoryId: r.categoryId, cadence: 'monthly', anchor, day, day2: null,
+      endDate: null, paused: false, skipped: [], postedThrough: isMonth(r.lastPostedMonth) ? at(r.lastPostedMonth) : addDays(anchor, -1), updatedAt: stamp };
+  }
+  const total = ym => cents(d.monthBudgets && d.monthBudgets[ym] != null ? d.monthBudgets[ym] : d.monthlyBudget || 800);
+  const plans = {};
+  for (const m of monthRange(monthOf(trackingStart), cm)) {
+    const limits = {};
+    for (const c of Object.values(categories)) limits[c.id] = c.limit;
+    plans[m] = { month: m, total: total(m), limits, moves: [], legacyLimits: m < cm, updatedAt: stamp };
+  }
+  const settings = { id: 'settings', defaultBudget: cents(d.monthlyBudget || 800), trackingStart, updatedAt: stamp };
+  return normalizeState({ settings, categories, plans, recurring, entries }).state;
+}
+
+function loadState() {
+  const raw2 = disk.get(K2);
+  if (raw2) {
+    try { return normalizeState(JSON.parse(raw2)).state; } catch (e) { disk.set(K2 + '-unreadable-' + Date.now(), raw2); }
+  }
+  const raw1 = disk.get(K1);
+  if (raw1) {
+    try {
+      const st = migrateV1(JSON.parse(raw1));
+      disk.set('tally-before-v2', raw1); // untouched copy of the old data
+      disk.set(K2, JSON.stringify(st));
+      return st;
+    } catch (e) { disk.set(K1 + '-unreadable-' + Date.now(), raw1); }
+  }
+  return freshState();
+}
+let S = loadState();
+const persist = () => { if (!disk.set(K2, JSON.stringify(S))) toast('Could not save on this device. Check that private browsing is off.'); };
+
+// =====================================================================
+// Writing (every change goes through here so it is saved locally and synced)
+// =====================================================================
+const COLS = ['meta', 'categories', 'plans', 'recurring', 'entries'];
+let calcVersion = 0;
+const keyOf = (col, o) => (col === 'plans' ? o.month : col === 'meta' ? 'settings' : o.id);
+function put(col, obj) {
+  const o = JSON.parse(JSON.stringify(obj));
+  o.updatedAt = Date.now();
+  if (col === 'meta') S.settings = o; else S[col][keyOf(col, o)] = o;
+  calcVersion++; persist();
+  meta.changesSinceBackup++; saveMeta();
+  cloudPut(col, keyOf(col, o), o);
+  return o;
+}
+function removeDoc(col, key) {
+  delete S[col][key];
+  calcVersion++; persist();
+  meta.changesSinceBackup++; saveMeta();
+  cloudRemove(col, key);
+}
+
+// =====================================================================
+// Calculations
+// =====================================================================
+const memo = new Map(); let memoVersion = -1;
+function cached(key, fn) {
+  if (memoVersion !== calcVersion) { memo.clear(); memoVersion = calcVersion; }
+  if (memo.has(key)) return memo.get(key);
+  const v = fn(); memo.set(key, v); return v;
+}
+const catList = () => Object.values(S.categories).sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+const activeCats = () => catList().filter(c => !c.archived);
+const archivedCats = () => catList().filter(c => c.archived);
+const catFor = id => S.categories[id] || UNKNOWN;
+const allEntries = () => cached('all', () => Object.values(S.entries).sort((a, b) => (a.date === b.date ? (b.ts || 0) - (a.ts || 0) : (a.date < b.date ? 1 : -1))));
+const sign = e => (e.type === 'refund' ? -1 : 1);
+
+function monthNet(M) {
+  return cached('net' + M, () => {
+    let expenses = 0, refunds = 0, count = 0; const byCat = {};
+    for (const e of allEntries()) {
+      if (monthOf(e.date) !== M) continue;
+      count++;
+      if (e.type === 'refund') refunds += e.amount; else expenses += e.amount;
+      for (const p of e.parts) byCat[p.categoryId] = (byCat[p.categoryId] || 0) + sign(e) * p.amount;
+    }
+    return { expenses, refunds, net: expenses - refunds, byCat, count };
+  });
+}
+
+// The plan for a month: its own saved plan, or the closest earlier one, or the defaults.
+function planFor(M) {
+  if (S.plans[M]) return Object.assign({ own: true }, S.plans[M]);
+  const earlier = Object.keys(S.plans).filter(k => k < M).sort().pop();
+  if (earlier) { const p = S.plans[earlier]; return { month: M, total: p.total, limits: Object.assign({}, p.limits), moves: [], own: false, from: earlier }; }
+  return { month: M, total: S.settings.defaultBudget, limits: {}, moves: [], own: false, from: null };
+}
+function limitIn(plan, cat) {
+  if (has(plan.limits, cat.id)) return plan.limits[cat.id];
+  if (cat.createdMonth && plan.month < cat.createdMonth) return null;
+  return cat.limit == null ? null : cat.limit;
+}
+function resolvedPlan(M) {
+  const p = planFor(M), limits = {};
+  for (const c of catList()) limits[c.id] = limitIn(p, c);
+  return { month: M, total: p.total, limits, moves: p.moves || [], legacyLimits: !!p.legacyLimits };
+}
+// Saves explicit plans for every earlier month so a change never rewrites the past.
+function freezeBefore(M) {
+  const start = monthOf(S.settings.trackingStart);
+  for (const m of monthRange(start, prevMonth(M))) {
+    if (!S.plans[m]) put('plans', resolvedPlan(m));
+    else {
+      const p = S.plans[m], missing = catList().filter(c => !has(p.limits, c.id));
+      if (missing.length) { const r = resolvedPlan(m); put('plans', Object.assign({}, p, { limits: r.limits })); }
+    }
+  }
+}
+function editPlan(M, change) {
+  freezeBefore(M);
+  const p = S.plans[M] ? JSON.parse(JSON.stringify(S.plans[M])) : resolvedPlan(M);
+  for (const c of catList()) if (!has(p.limits, c.id)) p.limits[c.id] = limitIn(planFor(M), c);
+  change(p);
+  put('plans', p);
+}
+
+function catState(cat, M) {
+  return cached(`cs|${cat.id}|${M}`, () => {
+    const limit = limitIn(planFor(M), cat);
+    const spent = monthNet(M).byCat[cat.id] || 0;
+    const rollingNow = cat.rollover && cat.rolloverFrom && M >= cat.rolloverFrom;
+    let carry = 0;
+    if (rollingNow && M > cat.rolloverFrom) carry = catState(cat, prevMonth(M)).available || 0;
+    const hasBudget = limit != null || rollingNow;
+    const available = hasBudget ? carry + (limit || 0) - spent : null;
+    return { limit, spent, carry, available, hasBudget, rolling: !!rollingNow };
+  });
+}
+
+function breakdownRows(M) {
+  const net = monthNet(M), rows = [];
+  for (const c of catList()) {
+    const spent = net.byCat[c.id] || 0;
+    if (!c.archived || spent !== 0) rows.push({ cat: c, spent, st: catState(c, M) });
+  }
+  const known = new Set(catList().map(c => c.id));
+  const orphan = sum(Object.entries(net.byCat).filter(([k]) => !known.has(k)), ([, v]) => v);
+  if (orphan) rows.push({ cat: UNKNOWN, spent: orphan, st: { hasBudget: false } });
+  return rows;
+}
+
+// ---------- Recurring schedules ----------
+function occurrences(r, from, to, max) {
+  max = max || 400;
+  const out = [];
+  const start = from > r.anchor ? from : r.anchor;
+  const stop = r.endDate && r.endDate < to ? r.endDate : to;
+  if (stop < start) return out;
+  const skipped = new Set(r.skipped || []);
+  const push = d => { if (d >= start && d <= stop && !skipped.has(d) && out.length < max) out.push(d); };
+  if (r.cadence === 'weekly' || r.cadence === 'biweekly') {
+    const step = r.cadence === 'weekly' ? 7 : 14;
+    let d = addDays(r.anchor, Math.max(0, Math.floor(daysBetween(r.anchor, start) / step)) * step);
+    while (d < start) d = addDays(d, step);
+    while (d <= stop && out.length < max) { push(d); d = addDays(d, step); }
+  } else if (r.cadence === 'yearly') {
+    const [, am] = nums(r.anchor);
+    for (let y = nums(start)[0]; y <= nums(stop)[0]; y++) {
+      const ym = `${y}-${pad(am)}`;
+      push(`${ym}-${pad(Math.min(r.day, daysIn(ym)))}`);
+    }
+  } else {
+    const days = r.cadence === 'twicemonthly' && r.day2 ? [r.day, r.day2] : [r.day];
+    for (const ym of monthRange(monthOf(start), monthOf(stop))) {
+      const ds = [...new Set(days.map(day => `${ym}-${pad(Math.min(day, daysIn(ym)))}`))].sort();
+      ds.forEach(push);
+    }
+  }
+  return out;
+}
+const occurrenceId = (r, d) => `rec_${r.id}_${d}`;
+function upcomingIn(M) {
+  const t = today(), end = `${M}-${pad(daysIn(M))}`;
+  const start = M === curMonth() ? t : `${M}-01`;
+  const out = [];
+  for (const r of Object.values(S.recurring)) {
+    if (r.paused) continue;
+    for (const d of occurrences(r, start, end)) {
+      if (r.postedThrough && d <= r.postedThrough) continue;
+      if (S.entries[occurrenceId(r, d)]) continue;
+      out.push({ r, date: d, amount: r.amount });
+    }
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+function nextDates(r, n) {
+  const t = today();
+  const from = r.postedThrough && r.postedThrough >= t ? addDays(r.postedThrough, 1) : t;
+  return occurrences(r, from, addDays(t, 800), n);
+}
+const perMonth = r => Math.round(r.amount * ({ weekly: 52 / 12, biweekly: 26 / 12, twicemonthly: 2, monthly: 1, yearly: 1 / 12 }[r.cadence] || 1));
+function cadenceText(r) {
+  const wd = fmtDate(r.anchor, { weekday: 'long' });
+  switch (r.cadence) {
+    case 'weekly': return `Weekly on ${wd}s`;
+    case 'biweekly': return `Every 2 weeks on ${wd}s`;
+    case 'twicemonthly': return `Twice a month, the ${ordinal(r.day)} and ${ordinal(r.day2 || r.day)}`;
+    case 'yearly': return `Yearly on ${fmtDate(r.anchor, { month: 'short', day: 'numeric' })}`;
+    default: return `Monthly on the ${ordinal(r.day)}`;
+  }
+}
+
+// Adds an entry for each recurring payment whose date has arrived. Entry ids are built from the
+// schedule and date, so two devices (or two tabs) can never create the same payment twice.
+let canGenerate = true;
+function postDueRecurring() {
+  if (!canGenerate) return 0;
+  const t = today();
+  let added = 0;
+  for (const r of Object.values(S.recurring)) {
+    if (r.paused) continue;
+    const from = r.postedThrough ? addDays(r.postedThrough, 1) : r.anchor;
+    const dates = occurrences(r, from, t, 400);
+    for (const d of dates) {
+      const id = occurrenceId(r, d);
+      if (S.entries[id]) continue;
+      put('entries', { id, type: 'expense', date: d, amount: r.amount, parts: [{ categoryId: r.categoryId, amount: r.amount }], note: r.name, recurringId: r.id, ts: Date.now() });
+      added++;
+    }
+    if (dates.length && r.postedThrough !== t) put('recurring', Object.assign({}, S.recurring[r.id] || r, { postedThrough: t }));
+  }
+  return added;
+}
+
+// ---------- Month summary ----------
+function summary(M) {
+  const plan = planFor(M), n = monthNet(M), cur = curMonth();
+  const isCur = M === cur, dayCount = daysIn(M);
+  const day = isCur ? nums(today())[2] : (M < cur ? dayCount : 0);
+  const P = plan.total, A = P - n.net;
+  const upcoming = isCur ? upcomingIn(M) : [];
+  const U = sum(upcoming, o => o.amount), Q = A - U;
+  const daysLeft = Math.max(dayCount - day + 1, 1);
+  const perDay = Math.floor(Math.max(Q, 0) / daysLeft);
+  const expected = Math.round(P * day / dayCount), under = expected - n.net;
+  const status = n.net > P ? 'bad' : (isCur && under < 0 ? 'warn' : 'good');
+  let headline;
+  if (status === 'bad') headline = 'Over budget';
+  else if (status === 'warn') headline = `${whole(-under)} over pace`;
+  else headline = isCur ? (under < 50 ? 'Right on pace' : `${whole(under)} under pace`) : 'Stayed on budget';
+  let detail;
+  if (!isCur) detail = A >= 0 ? `Finished ${money(A)} under budget.` : `Finished ${money(-A)} over budget.`;
+  else if (status === 'bad') detail = daysLeft === 1 ? 'Today is the last day of the month.' : `${daysLeft} days left in the month. Open Plan to adjust, or review your spending.`;
+  else if (Q < 0) detail = `Your upcoming recurring payments are ${money(-Q)} more than what's left.`;
+  else if (daysLeft === 1) detail = `Last day of the month, with ${money(Q)} free to spend.`;
+  else detail = `About ${floorWhole(perDay)} a day keeps you on budget for the ${daysLeft} days left.`;
+  return { M, plan, n, isCur, day, dayCount, P, A, U, Q, upcoming, daysLeft, perDay, status, headline, detail,
+    fracSpent: P > 0 ? n.net / P : (n.net > 0 ? 1 : 0), fracElapsed: day / dayCount };
+}
+
+function trackingStartMonth() { return monthOf(S.settings.trackingStart); }
+function isPartialMonth(M) { return M === trackingStartMonth() && nums(S.settings.trackingStart)[2] > 1; }
+function monthsWithData() {
+  const set = new Set(allEntries().map(e => monthOf(e.date)));
+  set.add(curMonth());
+  return [...set].sort().reverse();
+}
+// Months that count toward averages: finished, and not the partial month tracking started in.
+const fullMonths = () => monthsWithData().filter(m => m < curMonth() && m >= trackingStartMonth() && !isPartialMonth(m));
+
+// =====================================================================
+// Screen state and rendering
+// =====================================================================
+const ui = { tab: 'overview', page: null, planMonth: null, reorder: false, sheet: null,
+  filters: { q: '', period: 'current', cat: 'all', type: 'all' } };
+const TABS = [['overview', 'Overview', 'pie'], ['spending', 'Spending', 'list'], ['plan', 'Plan', 'target'], ['history', 'History', 'bars'], ['settings', 'Settings', 'settings']];
+
+let renderQueued = false;
+function scheduleRender() { if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; render(); }); }
+function render() {
+  $('#tabs').innerHTML = TABS.map(([id, label, ic]) =>
+    `<button data-act="tab" data-tab="${id}" ${ui.tab === id ? 'aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></button>`).join('');
+  // Keep focus and cursor position in a field that is being typed in.
+  const active = document.activeElement;
+  const keep = active && active.id && $('#view').contains(active) ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;
+  let html;
+  if (ui.tab === 'overview') html = viewOverview();
+  else if (ui.tab === 'spending') html = viewSpending();
+  else if (ui.tab === 'plan') html = viewPlan();
+  else if (ui.tab === 'history') html = ui.page ? viewMonth(ui.page.month) : viewHistory();
+  else html = viewSettings();
+  const view = $('#view');
+  view.className = ui.tab === 'overview' ? 'wide' : '';
+  view.innerHTML = html;
+  if (keep) {
+    const el = document.getElementById(keep.id);
+    if (el) { el.focus(); try { if (keep.start != null) el.setSelectionRange(keep.start, keep.end); } catch (e) {} }
+  }
+}
+
+const catIcon = (c, size) => `<span class="cat-ic ${size || ''}" style="background:${esc(c.color)}">${icon(c.icon)}</span>`;
+const STATUS_ICON = { good: 'ok', warn: 'alert', bad: 'stop' };
+
+function syncPill() {
+  if (!sync.user) return '';
+  const map = { synced: ['cloud', 'Synced'], saving: ['refresh', 'Saving'], connecting: ['refresh', 'Connecting'], offline: ['cloud-off', 'Offline'], error: ['cloud-off', 'Sync issue'] };
+  const [ic, label] = map[sync.status] || map.connecting;
+  return `<button class="sync-pill" data-act="tab" data-tab="settings" aria-label="Sync status: ${label}">${icon(ic)}<span>${label}</span></button>`;
+}
+
+function installHint() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  if (meta.hintOff || !ios || standalone) return '';
+  return `<div class="hint"><div>Add Tally to your Home Screen: tap <b>Share</b>, then <b>Add to Home Screen</b>. ${sync.user ? '' : "Until you turn on sync in Settings, spending entered here in Safari stays separate from the Home Screen app."}</div>
+    <button class="x" data-act="hide-hint" aria-label="Dismiss">${icon('x')}</button></div>`;
+}
+function backupNudge() {
+  if (sync.user) return '';
+  const days = meta.lastBackupAt ? Math.floor((Date.now() - meta.lastBackupAt) / 86400000) : null;
+  if (meta.changesSinceBackup < 5 || (days != null && days < 14)) return '';
+  const when = days == null ? "You haven't saved a backup yet." : `Your last backup was ${days} days ago.`;
+  return `<div class="hint"><div>${when} Your spending is stored only on this device.</div><button class="go" data-act="export">Back up</button></div>`;
+}
+
+function summaryCard(s) {
+  const left = s.A;
+  const calcRows = [
+    `<div class="kv"><span>${esc(monthShort(s.M))} allowance</span><span class="num">${money(s.P)}</span></div>`,
+    `<div class="kv"><span>Spending (${s.n.count - countRefunds(s.M)} ${s.n.count - countRefunds(s.M) === 1 ? 'entry' : 'entries'})</span><span class="num">−${money(s.n.expenses)}</span></div>`,
+    s.n.refunds ? `<div class="kv"><span>Refunds</span><span class="num pos">+${money(s.n.refunds)}</span></div>` : '',
+    `<div class="kv tot"><span>Left this month</span><span class="num">${money(left)}</span></div>`,
+    ...s.upcoming.map(o => `<div class="kv ind"><span>${esc(o.r.name)} · ${esc(shortDate(o.date))}</span><span class="num">−${money(o.amount)}</span></div>`),
+    s.upcoming.length ? `<div class="kv tot"><span>Free to spend</span><span class="num">${money(s.Q)}</span></div>` : '',
+    s.isCur && s.Q > 0 ? `<div class="muted">Daily guide: ${money(s.Q)} ÷ ${s.daysLeft} days left (including today) = ${money(Math.floor(s.Q / s.daysLeft))}, shown rounded down.</div>` : '',
+    `<div class="muted">This is your Tally plan, not your bank balance.</div>`
+  ].join('');
+  return `<section class="card" aria-label="This month">
+    <div>
+      <div class="muted small">${left >= 0 ? 'Left this month' : 'Over budget by'}</div>
+      <div class="big num ${left < 0 ? 'over' : ''}">${money(Math.abs(left))}</div>
+    </div>
+    <div class="meter" aria-hidden="true">
+      <div class="track"><div class="fillbar" style="width:${clamp01(s.fracSpent) * 100}%;background:var(--${s.status})"></div></div>
+      ${s.isCur ? `<div class="tick" style="left:${clamp01(s.fracElapsed) * 100}%"></div>` : ''}
+    </div>
+    <div class="split muted foot num"><span>${money(s.n.net)} of ${whole(s.P)} spent</span>${s.isCur ? `<span>Day ${s.day} of ${s.dayCount}</span>` : ''}</div>
+    ${s.U > 0 ? `<hr class="rule"><div class="kv"><span>Upcoming recurring</span><span class="num">−${money(s.U)}</span></div>
+      <div class="kv"><b>Free to spend</b><b class="num ${s.Q < 0 ? 'neg' : ''}">${money(s.Q)}</b></div>` : ''}
+    <hr class="rule">
+    <div class="status s-${s.status}">${icon(STATUS_ICON[s.status])}<span>${esc(s.headline)}</span></div>
+    <div class="muted small">${esc(s.detail)}</div>
+    <details class="calc" ${ui.calcOpen ? 'open' : ''}><summary>${icon('right')}How this is calculated</summary><div class="calc-body">${calcRows}</div></details>
+  </section>`;
+}
+const countRefunds = M => allEntries().filter(e => e.type === 'refund' && monthOf(e.date) === M).length;
+
+function donut(rows) {
+  const rs = rows.filter(r => r.spent > 0);
+  const total = sum(rs, r => r.spent);
+  const R = 100, r = 64, cx = 105, cy = 105, gap = rs.length > 1 ? 0.035 : 0;
+  let a = -Math.PI / 2, shapes = '';
+  if (rs.length === 1) shapes = `<circle cx="${cx}" cy="${cy}" r="${(R + r) / 2}" fill="none" stroke="${esc(rs[0].cat.color)}" stroke-width="${R - r}"/>`;
+  else for (const row of rs) {
+    const span = row.spent / total * Math.PI * 2, g = Math.min(gap, span * 0.4);
+    const a0 = a + g / 2, a1 = a + span - g / 2, large = a1 - a0 > Math.PI ? 1 : 0;
+    const pt = (rad, ang) => `${(cx + rad * Math.cos(ang)).toFixed(2)} ${(cy + rad * Math.sin(ang)).toFixed(2)}`;
+    shapes += `<path fill="${esc(row.cat.color)}" d="M${pt(R, a0)} A${R} ${R} 0 ${large} 1 ${pt(R, a1)} L${pt(r, a1)} A${r} ${r} 0 ${large} 0 ${pt(r, a0)} Z"/>`;
+    a += span;
+  }
+  return `<div class="donut" role="img" aria-label="Spending by category, ${money(total)} in total">
+    <svg viewBox="0 0 210 210">${shapes}</svg><div class="mid"><b class="num">${whole(total)}</b><span class="muted foot">spent</span></div></div>`;
+}
+
+// One category with what was spent and, when it has a limit or rollover, what is left.
+function catLine(row, M, clickable) {
+  const c = row.cat, st = row.st;
+  let extra = '';
+  if (st.hasBudget) {
+    const pool = (st.limit || 0) + st.carry, over = st.available < 0;
+    const frac = pool > 0 ? row.spent / pool : (row.spent > 0 ? 1 : 0);
+    extra = `<div class="thin"><div style="width:${clamp01(frac) * 100}%;background:${over ? 'var(--bad)' : esc(c.color)}"></div></div>
+      <div class="cap ${over ? 'over' : ''} num">${over ? `${money(-st.available)} over` : `${money(st.available)} left`}${st.limit != null ? ` of ${whole(st.limit)}` : ''}${st.carry ? ` · ${st.carry > 0 ? '+' : '−'}${money(Math.abs(st.carry))} carried in` : ''}</div>`;
+  }
+  const inner = `${catIcon(c)}<div class="body"><div class="split"><span class="name">${esc(c.name)}${st.rolling ? ` <span class="badge" title="Rolls over">${icon('rotate')}</span>` : ''}</span><span class="num">${money(row.spent)}</span></div>${extra}</div>`;
+  return clickable && c.id !== 'unknown'
+    ? `<button class="catline" data-act="filter-cat" data-id="${esc(c.id)}" data-month="${M}" aria-label="${esc(c.name)}: ${money(row.spent)} spent. Show entries">${inner}</button>`
+    : `<div class="catline">${inner}</div>`;
+}
+
+function viewOverview() {
+  const M = curMonth(), s = summary(M), rows = breakdownRows(M);
+  return `<div class="ov"><div>
+      <div class="title-row"><h1>${esc(monthTitle(M))}</h1>${syncPill()}</div>
+      ${installHint()}
+      ${summaryCard(s)}
+      <div class="btn-col">
+        <button class="primary" data-act="add">${icon('plus')}<span>Add spending</span></button>
+        <button class="secondary" data-act="afford">${icon('calculator')}<span>Can I afford this?</span></button>
+      </div>
+      ${backupNudge()}
+    </div><div>
+      <section class="card"><h2>Where it went</h2>
+        ${s.n.net > 0 ? donut(rows) : '<div class="muted small">Nothing spent yet this month.</div>'}
+        ${rows.map(r => catLine(r, M, true)).join('')}
+      </section>
+    </div></div>`;
+}
+
+// ---------- Spending ----------
+function entryTitle(e) {
+  if (e.note) return e.note;
+  if (e.parts.length > 1) return 'Split purchase';
+  return catFor(e.parts[0].categoryId).name;
+}
+function entryRow(e, catFilter) {
+  const first = catFor(e.parts[0].categoryId);
+  const isSplit = e.parts.length > 1;
+  const catNames = e.parts.map(p => catFor(p.categoryId).name).join(' + ');
+  const sub = [e.note ? catNames : (isSplit ? catNames : ''), e.type === 'refund' ? 'Refund' : ''].filter(Boolean).join(' · ');
+  let partNote = '';
+  if (catFilter && isSplit) { const p = e.parts.find(x => x.categoryId === catFilter); if (p) partNote = ` · ${money(p.amount)} in ${esc(catFor(catFilter).name)}`; }
+  const ic = isSplit ? `<span class="cat-ic m" style="background:var(--fg2)">${icon('split')}</span>` : catIcon(first, 'm');
+  return `<button class="row with-icon" data-act="edit-entry" data-id="${esc(e.id)}">${ic}
+    <span class="grow"><div>${esc(entryTitle(e))}</div>${sub || partNote ? `<div class="muted foot">${esc(sub)}${partNote}</div>` : ''}</span>
+    ${e.recurringId ? `<span class="muted" style="font-size:14px" aria-label="Recurring">${icon('repeat')}</span>` : ''}
+    <span class="amt num ${e.type === 'refund' ? 'pos' : ''}">${e.type === 'refund' ? '+' : ''}${money(e.amount)}</span></button>`;
+}
+function entrySections(list, catFilter) {
+  const groups = new Map();
+  for (const e of list) { if (!groups.has(e.date)) groups.set(e.date, []); groups.get(e.date).push(e); }
+  return [...groups.entries()].map(([day, items]) => {
+    const net = sum(items, e => sign(e) * partAmount(e, catFilter));
+    return `<div class="section"><div class="sec-head"><span>${esc(dayTitle(day))}</span><span class="num">${net < 0 ? '+' : ''}${money(Math.abs(net))}</span></div>
+      <div class="group">${items.map(e => entryRow(e, catFilter)).join('')}</div></div>`;
+  }).join('');
+}
+const partAmount = (e, catFilter) => (catFilter ? sum(e.parts.filter(p => p.categoryId === catFilter), p => p.amount) : e.amount);
+function filteredEntries() {
+  const f = ui.filters, q = f.q.trim().toLowerCase();
+  const period = f.period === 'current' ? curMonth() : f.period === 'last' ? prevMonth(curMonth()) : f.period;
+  return allEntries().filter(e => {
+    if (period !== 'all' && monthOf(e.date) !== period) return false;
+    if (f.cat !== 'all' && !e.parts.some(p => p.categoryId === f.cat)) return false;
+    if (f.type === 'expense' && e.type !== 'expense') return false;
+    if (f.type === 'refund' && e.type !== 'refund') return false;
+    if (f.type === 'recurring' && !e.recurringId) return false;
+    if (q) {
+      const hay = [e.note, ...e.parts.map(p => catFor(p.categoryId).name), editable(e.amount), money(e.amount), e.date].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+function viewSpending() {
+  const f = ui.filters, list = filteredEntries(), catFilter = f.cat !== 'all' ? f.cat : null;
+  const net = sum(list, e => sign(e) * partAmount(e, catFilter));
+  const months = monthsWithData();
+  const periodOpts = [['current', 'This month'], ['last', 'Last month'], ...months.filter(m => m !== curMonth() && m !== prevMonth(curMonth())).map(m => [m, monthTitle(m)]), ['all', 'All time']];
+  const sel = (id, value, opts, label) => `<select id="${id}" data-filter="${id.slice(2)}" aria-label="${label}" class="${(id === 'f-period' ? value !== 'current' : value !== 'all') ? 'on' : ''}">
+    ${opts.map(([v, l]) => `<option value="${esc(v)}" ${v === value ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+  const filtered = f.q || f.period !== 'current' || f.cat !== 'all' || f.type !== 'all';
+  return `<div class="title-row"><h1>Spending</h1><button class="round-btn" data-act="add" aria-label="Add spending">${icon('plus')}</button></div>
+    <label class="search">${icon('search')}<input id="f-q" data-filter="q" type="search" placeholder="Search notes, categories, amounts" autocomplete="off" value="${esc(f.q)}" aria-label="Search spending"></label>
+    <div class="filters">
+      ${sel('f-period', f.period, periodOpts, 'Period')}
+      ${sel('f-cat', f.cat, [['all', 'All categories'], ...catList().map(c => [c.id, c.name + (c.archived ? ' (archived)' : '')])], 'Category')}
+      ${sel('f-type', f.type, [['all', 'All types'], ['expense', 'Expenses'], ['refund', 'Refunds'], ['recurring', 'Recurring']], 'Type')}
+      ${filtered ? '<button data-act="clear-filters">Clear</button>' : ''}
+    </div>
+    <div class="result-line num" role="status">${list.length} ${list.length === 1 ? 'entry' : 'entries'} · ${net < 0 ? '+' : ''}${money(Math.abs(net))} ${net < 0 ? 'back' : 'spent'}${catFilter ? ` in ${esc(catFor(catFilter).name)}` : ''}</div>
+    ${list.length ? entrySections(list, catFilter) : `<div class="empty"><b>${filtered ? 'No matches' : 'No spending yet'}</b><span>${filtered ? 'Try a different search or clear the filters.' : 'Tap + to add what you spend.'}</span></div>`}`;
+}
+
+// ---------- Plan ----------
+function viewPlan() {
+  const M = ui.planMonth || curMonth(), cur = curMonth();
+  const plan = planFor(M), cats = activeCats();
+  const minM = trackingStartMonth() < cur ? trackingStartMonth() : cur;
+  let maxM = cur; for (let i = 0; i < 12; i++) maxM = nextMonth(maxM);
+  const assigned = sum(cats, c => catState(c, M).limit || 0);
+  const diff = plan.total - assigned;
+  let scopeNote = '';
+  if (M < cur) scopeNote = `This is a past month. Changes here affect ${monthTitle(M)} only.`;
+  else if (!plan.own && plan.from) scopeNote = `Using ${monthTitle(plan.from)}'s plan. Changes here apply from ${monthTitle(M)} on.`;
+  else scopeNote = 'Changes apply to this month and the months after it, unless a later month has its own plan.';
+  if (plan.legacyLimits) scopeNote += " This month's category limits weren't saved by the older version of Tally, so today's limits are shown.";
+  const recs = Object.values(S.recurring).sort((a, b) => a.name.localeCompare(b.name));
+  return `<div class="title-row"><h1>Plan</h1></div>
+    <div class="monthnav"><button class="round-btn" data-act="plan-month" data-dir="-1" aria-label="Previous month" ${M <= minM ? 'disabled' : ''}>${icon('left')}</button>
+      <b>${esc(monthTitle(M))}</b><button class="round-btn" data-act="plan-month" data-dir="1" aria-label="Next month" ${M >= maxM ? 'disabled' : ''}>${icon('right')}</button></div>
+    <div class="section"><div class="group">
+      <button class="row" data-act="edit-total"><span class="grow"><div>Monthly allowance</div></span><span class="amt num"><b>${money(plan.total)}</b></span><span class="chev">${icon('right')}</span></button>
+      <div class="row"><span class="grow"><div>Assigned to categories</div></span><span class="val num">${money(assigned)}</span></div>
+      <div class="row"><span class="grow"><div>${diff >= 0 ? 'Not assigned' : 'Over-assigned'}</div></span><span class="num ${diff < 0 ? 'neg' : 'val'}">${money(Math.abs(diff))}</span></div>
+    </div><div class="sec-foot">${diff < 0 ? `Category limits add up to ${money(diff * -1)} more than your allowance. Lower a limit or raise the allowance; moving money between categories won't close this gap. ` : ''}${esc(scopeNote)}</div></div>
+
+    <div class="section"><div class="sec-head"><span>Categories</span>${cats.length > 1 ? `<button data-act="toggle-reorder">${ui.reorder ? 'Done' : 'Reorder'}</button>` : ''}</div>
+    <div class="group">
+      ${cats.map((c, i) => {
+        if (ui.reorder) return `<div class="row with-icon">${catIcon(c, 's')}<span class="grow"><div>${esc(c.name)}</div></span>
+          <button class="round-btn" data-act="move-cat" data-id="${esc(c.id)}" data-dir="-1" aria-label="Move ${esc(c.name)} up" ${i === 0 ? 'disabled' : ''}>${icon('up')}</button>
+          <button class="round-btn" data-act="move-cat" data-id="${esc(c.id)}" data-dir="1" aria-label="Move ${esc(c.name)} down" ${i === cats.length - 1 ? 'disabled' : ''}>${icon('down')}</button></div>`;
+        const st = catState(c, M);
+        const sub = [st.limit != null ? `Limit ${whole(st.limit)}` : 'No limit', `${money(st.spent)} spent`, st.carry ? `${st.carry > 0 ? '+' : '−'}${money(Math.abs(st.carry))} carried` : ''].filter(Boolean).join(' · ');
+        return `<button class="row with-icon" data-act="cat-plan" data-id="${esc(c.id)}">${catIcon(c, 's')}
+          <span class="grow"><div>${esc(c.name)}${st.rolling ? ` <span class="badge">${icon('rotate')}Rolls over</span>` : ''}</div><div class="muted foot num">${esc(sub)}</div></span>
+          ${st.hasBudget ? `<span class="amt num ${st.available < 0 ? 'neg' : ''}">${st.available < 0 ? '−' : ''}${money(Math.abs(st.available))}<div class="muted foot">${st.available < 0 ? 'over' : 'left'}</div></span>` : ''}
+          <span class="chev">${icon('right')}</span></button>`;
+      }).join('')}
+      <button class="row link" data-act="new-cat">${icon('plus')}<span>Add category</span></button>
+    </div></div>
+    <button class="secondary" data-act="move-money" ${cats.length < 2 ? 'disabled' : ''}>${icon('swap')}<span>Move money between categories</span></button>
+
+    <div class="section"><div class="sec-head"><span>Recurring payments</span>${recs.length ? `<span class="num">≈ ${money(sum(recs.filter(r => !r.paused), perMonth))}/mo</span>` : ''}</div>
+    <div class="group">
+      ${recs.map(r => { const next = r.paused ? null : nextDates(r, 1)[0]; const c = catFor(r.categoryId);
+        return `<button class="row with-icon" data-act="edit-rec" data-id="${esc(r.id)}">${catIcon(c, 's')}
+          <span class="grow"><div>${esc(r.name)}${r.paused ? ' <span class="badge">Paused</span>' : ''}</div><div class="muted foot">${esc(cadenceText(r))}${next ? ` · next ${esc(shortDate(next))}` : (r.paused ? '' : ' · ended')}</div></span>
+          <span class="amt num">${money(r.amount)}</span><span class="chev">${icon('right')}</span></button>`; }).join('')}
+      <button class="row link" data-act="new-rec">${icon('plus')}<span>Add recurring payment</span></button>
+    </div><div class="sec-foot">Tally adds these to your spending on their dates. Upcoming ones are set aside in "Free to spend" on the Overview. Nothing is paid for you.</div></div>`;
+}
+
+// ---------- History ----------
+function viewHistory() {
+  const months = monthsWithData(), recent = months.slice(0, 6).reverse(), cur = curMonth();
+  const full = fullMonths();
+  const average = full.length ? Math.round(sum(full, m => monthNet(m).net) / full.length) : null;
+  const H = 190 - 22 - 22;
+  const top = Math.max(...recent.map(m => Math.max(monthNet(m).net, planFor(m).total)), 100) * 1.1;
+  const chart = `<div class="bars">${recent.map(m => {
+      const v = monthNet(m).net, b = planFor(m).total;
+      return `<div class="col" title="${esc(monthTitle(m))}: ${money(v)} of ${money(b)}">
+        <div class="goal" style="bottom:${(b / top) * H + 22}px"></div>
+        <div class="bar ${v > b ? 'over' : ''}" style="height:${Math.max(v, 0) / top * H}px"></div><div class="lab">${esc(monthShort(m))}</div></div>`; }).join('')}
+    </div><div class="legend"><span><i></i>Spent</span><span><i class="o"></i>Over budget</span><span><i class="g"></i>Allowance</span></div>`;
+  let catAvg = '';
+  if (full.length) {
+    const sums = {};
+    for (const m of full) for (const [k, v] of Object.entries(monthNet(m).byCat)) sums[k] = (sums[k] || 0) + v;
+    const rows = Object.entries(sums).map(([id, v]) => ({ cat: catFor(id), amount: Math.round(v / full.length) })).sort((a, b) => b.amount - a.amount);
+    if (rows.length) catAvg = `<div class="section"><div class="sec-head"><span>Average per month by category</span></div><div class="group">
+      ${rows.map(r => `<div class="row with-icon">${catIcon(r.cat, 's')}<span class="grow"><div>${esc(r.cat.name)}</div></span><span class="val num">${money(r.amount)}</span></div>`).join('')}</div></div>`;
+  }
+  return `<div class="title-row"><h1>History</h1></div>
+    <div class="section"><div class="sec-head"><span>Monthly spending</span></div><div class="card">${chart}</div></div>
+    <div class="section"><div class="sec-head"><span>Averages</span></div><div class="group">
+      <div class="row"><span class="grow"><div>This month so far</div></span><span class="val num">${money(monthNet(cur).net)}</span></div>
+      ${average != null ? `<div class="row"><span class="grow"><div>Monthly average</div></span><span class="val num">${money(average)}</span></div>` : ''}
+    </div><div class="sec-foot">${average == null
+      ? `Your monthly average shows up here after your first full month.${isPartialMonth(trackingStartMonth()) ? ` ${monthTitle(trackingStartMonth())} is left out because tracking started on ${shortDate(S.settings.trackingStart)}.` : ''}`
+      : `Average of ${full.length} full ${full.length === 1 ? 'month' : 'months'}. The month in progress${isPartialMonth(trackingStartMonth()) ? ' and your partial first month are' : ' is'} left out.`}</div></div>
+    ${catAvg}
+    <div class="section"><div class="sec-head"><span>Months</span></div><div class="group">
+      ${months.map(m => { const v = monthNet(m).net, diff = planFor(m).total - v;
+        const sub = m === cur ? 'In progress' : (diff >= 0 ? `${money(diff)} under budget` : `${money(-diff)} over budget`);
+        return `<button class="row" data-act="open-month" data-month="${m}">
+          <span class="grow"><div>${esc(monthTitle(m))}${isPartialMonth(m) ? ' <span class="badge">Partial</span>' : ''}</div><div class="foot ${m !== cur && diff < 0 ? 's-bad' : 'muted'}">${esc(sub)}</div></span>
+          <span class="amt num">${money(v)}</span><span class="chev">${icon('right')}</span></button>`; }).join('')}
+    </div></div>`;
+}
+function viewMonth(M) {
+  const s = summary(M), rows = breakdownRows(M).filter(r => r.spent !== 0 || r.st.hasBudget);
+  const list = allEntries().filter(e => monthOf(e.date) === M);
+  return `<div><button class="back" data-act="back">${icon('left')}<span>History</span></button><div class="title-row"><h1>${esc(monthTitle(M))}</h1></div></div>
+    <div class="group">
+      <div class="row"><span class="grow"><div>Spent</div></span><span class="val num">${money(s.n.expenses)}</span></div>
+      ${s.n.refunds ? `<div class="row"><span class="grow"><div>Refunds</div></span><span class="num pos">+${money(s.n.refunds)}</span></div>` : ''}
+      <div class="row"><span class="grow"><div>Allowance</div></span><span class="val num">${money(s.P)}</span></div>
+      <div class="row ${s.A < 0 ? 's-bad' : ''}"><span class="grow"><div>${s.A < 0 ? 'Over budget by' : (s.isCur ? 'Left' : 'Under budget by')}</div></span><span class="num">${money(Math.abs(s.A))}</span></div>
+    </div>
+    ${isPartialMonth(M) ? `<div class="sec-foot">Tracking started ${esc(shortDate(S.settings.trackingStart))}, so this month is partial.</div>` : ''}
+    ${s.n.net > 0 || rows.length ? `<section class="card"><h2>By category</h2>${s.n.net > 0 ? donut(rows) : ''}${rows.map(r => catLine(r, M, true)).join('')}</section>` : ''}
+    ${entrySections(list, null)}`;
+}
+
+// ---------- Settings ----------
+function viewSettings() {
+  const arch = archivedCats();
+  const days = meta.lastBackupAt ? Math.floor((Date.now() - meta.lastBackupAt) / 86400000) : null;
+  const backupLine = meta.lastBackupAt
+    ? `Last backup saved ${days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`} (${new Date(meta.lastBackupAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}). ${meta.changesSinceBackup ? `${meta.changesSinceBackup} ${meta.changesSinceBackup === 1 ? 'change' : 'changes'} since then.` : 'No changes since then.'}`
+    : "No backup saved from this device yet.";
+  return `<div class="title-row"><h1>Settings</h1></div>
+    ${viewAccount()}
+    <div class="section"><div class="sec-head"><span>Backup and export</span></div><div class="group">
+      <button class="row link" data-act="export">${icon('download')}<span>Save a backup file</span></button>
+      <button class="row link" data-act="import">${icon('upload')}<span>Restore from a backup file</span></button>
+      <button class="row link" data-act="csv">${icon('sheet')}<span>Export spending as CSV</span></button>
+    </div><div class="sec-foot">${esc(backupLine)} ${sync.user ? 'Sync keeps a copy in your account too, but a backup file is still a good safety net.' : 'Without sync, your spending is stored only on this device, and removing Tally from the Home Screen erases it.'} The CSV opens in Excel or Numbers; use the backup file to restore Tally.${storageOK ? '' : ' <b class="s-bad">Saving is not working in this browser right now.</b>'}</div></div>
+    ${arch.length ? `<div class="section"><div class="sec-head"><span>Archived categories</span></div><div class="group">
+      ${arch.map(c => `<div class="row with-icon">${catIcon(c, 's')}<span class="grow"><div>${esc(c.name)}</div></span><button style="color:var(--accent)" data-act="restore-cat" data-id="${esc(c.id)}">Restore</button></div>`).join('')}
+    </div><div class="sec-foot">Archived categories keep their history but don't appear when adding spending.</div></div>` : ''}
+    <div class="section"><div class="group">
+      <div class="row"><span class="grow"><div>Tracking since</div></span><span class="val">${esc(fmtDate(S.settings.trackingStart, { month: 'short', day: 'numeric', year: 'numeric' }))}</span></div>
+      <div class="row"><span class="grow"><div>Version</div></span><span class="val">Tally ${APP_VERSION}</span></div>
+    </div><div class="sec-foot">Budget, category limits and recurring payments are on the Plan tab.</div></div>`;
+}
+function viewAccount() {
+  const config = FIREBASE_CONFIG || window.__TALLY_TEST_CONFIG__;
+  if (!config) return `<div class="section"><div class="sec-head"><span>Sync</span></div><div class="group"><div class="row"><span class="grow muted">Sync isn't set up in this copy of Tally yet.</span></div></div></div>`;
+  if (!sync.cloud) return `<div class="section"><div class="sec-head"><span>Sync</span></div><div class="group"><div class="row"><span class="grow muted">${sync.loadError ? esc(sync.loadError) : 'Loading sync…'}</span></div></div></div>`;
+  if (sync.user) {
+    const label = { synced: 'Up to date', saving: 'Saving changes…', connecting: 'Connecting…', offline: 'Offline. Changes will sync when you reconnect.', error: sync.error || 'Something went wrong with sync.' }[sync.status] || 'Connecting…';
+    return `<div class="section"><div class="sec-head"><span>Sync</span></div><div class="group">
+      <div class="row"><span style="color:var(--accent);font-size:20px">${icon(sync.status === 'offline' || sync.status === 'error' ? 'cloud-off' : 'cloud')}</span><span class="grow"><div>${esc(sync.user.email || 'Signed in')}</div><div class="foot ${sync.status === 'error' ? 's-bad' : 'muted'}">${esc(label)}</div></span></div>
+      <button class="row link" data-act="sign-out">${icon('logout')}<span>Sign out on this device</span></button>
+    </div><div class="sec-foot">Sign in with the same email on your phone and laptop to keep them in sync. Signing out keeps a copy on this device.</div></div>`;
+  }
+  const a = ui.auth || (ui.auth = { email: '', password: '', error: '', busy: false, info: '' });
+  return `<div class="section"><div class="sec-head"><span>Sync</span></div>
+    <form class="group" id="auth-form" autocomplete="on">
+      <label class="row"><span style="width:84px">Email</span><input class="wide" id="a-email" type="email" autocomplete="username" inputmode="email" value="${esc(a.email)}" placeholder="you@example.com" required></label>
+      <label class="row"><span style="width:84px">Password</span><input class="wide" id="a-password" type="password" autocomplete="current-password" value="${esc(a.password)}" placeholder="At least 6 characters" required></label>
+      <button class="row link" type="submit" data-act="sign-in" ${a.busy ? 'disabled' : ''}>${icon('cloud')}<span>${a.busy ? 'Working…' : 'Sign in'}</span></button>
+      <button class="row link" type="button" data-act="sign-up" ${a.busy ? 'disabled' : ''}>${icon('plus')}<span>Create account</span></button>
+      <button class="row link" type="button" data-act="reset-password" ${a.busy ? 'disabled' : ''}><span>Forgot password?</span></button>
+    </form>
+    ${a.error ? `<div class="err" role="alert">${esc(a.error)}</div>` : ''}${a.info ? `<div class="sec-foot" role="status">${esc(a.info)}</div>` : ''}
+    <div class="sec-foot">Create an account once, then sign in with the same email on your phone and laptop. Your spending is stored in your own Firebase project.</div></div>`;
+}
+
+// =====================================================================
+// Sheets
+// =====================================================================
+let lastFocus = null;
+function openSheet(sheet) {
+  if (!ui.sheet) lastFocus = document.activeElement;
+  ui.sheet = sheet; renderSheet(true);
+}
+function closeSheet() {
+  ui.sheet = null; const el = $('#sheet'); el.hidden = true; el.innerHTML = '';
+  if (lastFocus && document.body.contains(lastFocus)) { try { lastFocus.focus(); } catch (e) {} }
+  lastFocus = null;
+}
+function shell(title, saveLabel, body, opts) {
+  opts = opts || {};
+  return `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <header><button data-act="close-sheet">${opts.cancel || 'Cancel'}</button><b id="sheet-title">${esc(title)}</b>${saveLabel ? `<button class="save" data-act="save-sheet" id="sheet-save">${esc(saveLabel)}</button>` : '<span style="min-width:64px"></span>'}</header>
+    <div class="scroll">${body}</div></div>`;
+}
+const field = (v, name) => `data-field="${name}" id="s-${name}" value="${esc(v)}"`;
+const catOptions = (sel, list, extra) => (extra || '') + list.map(c => `<option value="${esc(c.id)}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+function choicesFor(ids) {
+  const list = activeCats();
+  for (const id of ids) if (id && !list.some(c => c.id === id)) list.push(catFor(id));
+  return list;
+}
+
+function renderSheet(first) {
+  const sh = ui.sheet, el = $('#sheet');
+  if (!sh) return closeSheet();
+  const d = sh.draft;
+  let html = '';
+  if (sh.kind === 'entry') html = sheetEntry(sh, d);
+  else if (sh.kind === 'afford') html = sheetAfford(sh, d);
+  else if (sh.kind === 'catplan') html = sheetCatPlan(sh, d);
+  else if (sh.kind === 'catedit') html = sheetCatEdit(sh, d);
+  else if (sh.kind === 'move') html = sheetMove(sh, d);
+  else if (sh.kind === 'total') html = sheetTotal(sh, d);
+  else if (sh.kind === 'recurring') html = sheetRecurring(sh, d);
+  else if (sh.kind === 'restore') html = sheetRestore(sh);
+  else if (sh.kind === 'syncchoice') html = sheetSyncChoice(sh);
+  el.innerHTML = html;
+  el.hidden = false;
+  validateSheet();
+  if (first) {
+    const target = $('#sheet [data-autofocus]') || $('#sheet .panel');
+    if (target) { if (target.classList.contains('panel')) target.setAttribute('tabindex', '-1'); setTimeout(() => target.focus(), 60); }
+  }
+}
+
+// ---------- Entry (add / edit spending) ----------
+function entryDraft(e, preset) {
+  if (e) return { type: e.type, amount: editable(e.amount), categoryId: e.parts.length === 1 ? e.parts[0].categoryId : null,
+    split: e.parts.length > 1, parts: e.parts.map(p => ({ categoryId: p.categoryId, amount: editable(p.amount) })), note: e.note, date: e.date, repeat: 'none' };
+  return Object.assign({ type: 'expense', amount: '', categoryId: null, split: false, parts: [], note: '', date: today(), repeat: 'none' }, preset || {});
+}
+function sheetEntry(sh, d) {
+  const e = sh.item;
+  const linked = !!(e && e.recurringId && S.recurring[e.recurringId]);
+  const ids = [d.categoryId, ...d.parts.map(p => p.categoryId), ...(e ? e.parts.map(p => p.categoryId) : [])];
+  const choices = choicesFor(ids);
+  const refund = d.type === 'refund';
+  const catBlock = d.split
+    ? `<div class="section"><div class="sec-head"><span>Split across categories</span><button data-act="unsplit">Use one category</button></div><div class="group">
+        ${d.parts.map((p, i) => `<div class="split-row"><select data-part="${i}" data-pf="categoryId" aria-label="Category for split ${i + 1}"><option value="">Choose</option>${catOptions(p.categoryId, choices)}</select>
+          <input type="text" inputmode="decimal" data-part="${i}" data-pf="amount" value="${esc(p.amount)}" placeholder="0.00" aria-label="Amount for split ${i + 1}">
+          <button data-act="remove-part" data-i="${i}" aria-label="Remove split ${i + 1}" ${d.parts.length <= 2 ? 'disabled style="opacity:.3"' : ''}>${icon('x')}</button></div>`).join('')}
+        <button class="row link" data-act="add-part">${icon('plus')}<span>Add another category</span></button>
+      </div><div class="sec-foot num" id="split-status"></div></div>`
+    : `<div class="section"><div class="sec-head"><span>Category</span><button data-act="split">Split</button></div><div class="group"><div class="chips" role="radiogroup" aria-label="Category">
+        ${choices.map(c => `<button class="chip" role="radio" style="--c:${esc(c.color)}" data-act="pick-cat" data-id="${esc(c.id)}" aria-checked="${d.categoryId === c.id}">${catIcon(c, 'm')}<span>${esc(c.name)}</span></button>`).join('')}
+      </div></div></div>`;
+  const repeatBlock = linked
+    ? `<div class="section"><div class="group"><div class="row"><span class="muted" style="font-size:20px">${icon('repeat')}</span><span class="grow"><div>${esc(S.recurring[e.recurringId].name)}</div><div class="muted foot">${esc(cadenceText(S.recurring[e.recurringId]))}</div></span></div></div>
+       <div class="sec-foot">Edits here change only this payment. Change the schedule on the Plan tab.</div></div>`
+    : (!refund && !d.split ? `<div class="section"><div class="group"><label class="row"><span class="grow"><div>Repeat</div></span><select ${field(d.repeat, 'repeat')} aria-label="Repeat">
+        ${[['none', "Doesn't repeat"], ['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Monthly'], ['yearly', 'Yearly']].map(([v, l]) => `<option value="${v}" ${d.repeat === v ? 'selected' : ''}>${l}</option>`).join('')}
+      </select></label></div><div class="sec-foot" id="repeat-note"></div></div>` : '');
+  return shell(e ? (refund ? 'Edit refund' : 'Edit spending') : (refund ? 'Add refund' : 'Add spending'), 'Save', `
+    <div class="seg" role="radiogroup" aria-label="Type">
+      <button role="radio" data-act="set-type" data-type="expense" aria-checked="${!refund}">Expense</button>
+      <button role="radio" data-act="set-type" data-type="refund" aria-checked="${refund}">Refund</button>
+    </div>
+    <div class="section"><div class="group"><label class="amount ${refund ? 'refund' : ''}"><span>${refund ? '+$' : '$'}</span><input type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="${refund ? 'Refund amount' : 'Amount'}" ${field(d.amount, 'amount')} data-autofocus aria-describedby="err-amount"></label></div>
+      <div class="err" id="err-amount" role="alert"></div>${refund ? '<div class="sec-foot">A refund lowers that category\'s spending on the date you got the money back. Keep the original purchase as it is.</div>' : ''}</div>
+    ${catBlock}
+    <div class="section"><div class="group">
+      <label class="row"><input class="wide" type="text" placeholder="${refund ? 'Note, such as the store' : 'Note (optional)'}" autocomplete="off" aria-label="Note" ${field(d.note, 'note')}></label>
+      <label class="row"><span class="grow"><div>Date</div></span><input type="date" max="${today()}" ${field(d.date, 'date')} aria-describedby="err-date"></label>
+    </div><div class="err" id="err-date" role="alert"></div></div>
+    ${repeatBlock}
+    ${e ? `<div class="group"><button class="row danger" data-act="delete-entry">Delete</button></div>` : ''}`);
+}
+function entryErrors(d) {
+  const errs = {};
+  const a = parseCents(d.amount);
+  if (a.error) errs.amount = a.error;
+  if (a.empty) errs.amount = 'Enter an amount.';
+  if (!isDate(d.date)) errs.date = 'Choose a date.';
+  else if (d.date > today()) errs.date = 'Choose today or an earlier date. Use Repeat for payments that haven\'t happened yet.';
+  if (d.split) {
+    const parts = d.parts.map(p => ({ categoryId: p.categoryId, r: parseCents(p.amount) }));
+    if (parts.some(p => !p.categoryId)) errs.split = 'Choose a category for each split.';
+    else if (parts.some(p => p.r.error || p.r.empty)) errs.split = 'Enter an amount above $0 for each split.';
+    else if (new Set(parts.map(p => p.categoryId)).size !== parts.length) errs.split = 'Use each category once.';
+    else if (a.cents) {
+      const total = sum(parts, p => p.r.cents), diff = a.cents - total;
+      if (diff) errs.split = diff > 0 ? `${money(diff)} left to assign.` : `Splits are ${money(-diff)} more than the total.`;
+    }
+  } else if (!d.categoryId) errs.category = true;
+  return { errs, cents: a.cents };
+}
+
+// ---------- Can I afford this? ----------
+function sheetAfford(sh, d) {
+  const cats = activeCats();
+  return shell('Can I afford this?', null, `
+    <div class="section"><div class="group"><label class="amount"><span>$</span><input type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Amount" ${field(d.amount, 'amount')} data-autofocus></label></div><div class="err" id="err-amount" role="alert"></div></div>
+    <div class="group"><label class="row"><span class="grow"><div>Category</div></span><select ${field(d.categoryId, 'categoryId')} aria-label="Category"><option value="">Any</option>${catOptions(d.categoryId, cats)}</select></label></div>
+    <section class="card" id="afford-result" aria-live="polite"></section>
+    <button class="primary" data-act="afford-add" id="afford-add">${icon('plus')}<span>Add it as spending</span></button>
+    <div class="sec-foot">This checks your Tally plan for ${esc(monthTitle(curMonth()))}, not your bank balance. Nothing is saved unless you add it.</div>`, { cancel: 'Done' });
+}
+function affordResult(d) {
+  const a = parseCents(d.amount), s = summary(curMonth());
+  if (!a.cents) return { html: `<div class="muted small">Enter an amount to see how it fits this month. You have <b>${money(Math.max(s.Q, 0))}</b> free to spend${s.U ? ' after upcoming recurring payments' : ''}.</div>`, ok: false, error: a.error };
+  const x = a.cents, cat = d.categoryId ? S.categories[d.categoryId] : null;
+  const st = cat ? catState(cat, curMonth()) : null;
+  const freeAfter = s.Q - x, leftAfter = s.A - x;
+  const daysLeft = s.daysLeft, perDayAfter = Math.floor(Math.max(freeAfter, 0) / daysLeft);
+  const catAfter = st && st.hasBudget ? st.available - x : null;
+  let verdict, kind;
+  if (leftAfter < 0) { kind = 'bad'; verdict = `This would put you ${money(-leftAfter)} over your ${whole(s.P)} allowance.`; }
+  else if (freeAfter < 0) { kind = 'warn'; verdict = `It fits what's left, but leaves ${money(-freeAfter)} too little for your upcoming recurring payments.`; }
+  else if (catAfter != null && catAfter < 0) { kind = 'warn'; verdict = `It fits your month, but puts ${esc(cat.name)} ${money(-catAfter)} over its limit.`; }
+  else { kind = 'good'; verdict = 'Yes, this fits your plan.'; }
+  const rows = [
+    ['Free to spend', s.Q, freeAfter],
+    ['Left this month', s.A, leftAfter],
+    catAfter != null ? [`${cat.name} left`, st.available, catAfter] : null
+  ].filter(Boolean).map(([l, b, af]) => `<div class="kv"><span>${esc(l)}</span><span class="num">${money(b)} → <b class="${af < 0 ? 'neg' : ''}">${af < 0 ? '−' : ''}${money(Math.abs(af))}</b></span></div>`).join('');
+  return { ok: true, html: `<div class="verdict s-${kind}">${icon(STATUS_ICON[kind])}<span>${verdict}</span></div>${rows}
+    <div class="muted small">${freeAfter > 0 ? `Afterward, about ${floorWhole(perDayAfter)} a day for the ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left (now ${floorWhole(s.perDay)}).` : 'Afterward, nothing would be left to spend this month.'}</div>` };
+}
+
+// ---------- Category plan, details, move money, total ----------
+function sheetCatPlan(sh, d) {
+  const c = S.categories[sh.id], M = sh.month, st = catState(c, M);
+  const past = M < curMonth();
+  return shell(c.name, 'Save', `
+    <div class="card">
+      <div class="kv"><span>${esc(monthTitle(M))}</span><span></span></div>
+      ${st.carry ? `<div class="kv"><span>Carried in</span><span class="num ${st.carry < 0 ? 'neg' : ''}">${st.carry > 0 ? '+' : '−'}${money(Math.abs(st.carry))}</span></div>` : ''}
+      <div class="kv"><span>Limit</span><span class="num">${st.limit != null ? money(st.limit) : 'None'}</span></div>
+      <div class="kv"><span>Spent</span><span class="num">${money(st.spent)}</span></div>
+      ${st.hasBudget ? `<div class="kv tot"><b>${st.available < 0 ? 'Over by' : 'Left'}</b><b class="num ${st.available < 0 ? 'neg' : ''}">${money(Math.abs(st.available))}</b></div>` : ''}
+    </div>
+    <div class="section"><div class="group">
+      <label class="row"><span class="grow"><div>Monthly limit</div></span><input class="switch" type="checkbox" role="switch" data-field="hasLimit" id="s-hasLimit" ${d.hasLimit ? 'checked' : ''}></label>
+      <label class="row" ${d.hasLimit ? '' : 'hidden'} id="limit-row"><span class="grow"><div>Limit</div></span><span class="muted">$</span><input class="right num" type="text" inputmode="decimal" placeholder="0" aria-label="Limit in dollars" ${field(d.limit, 'limit')}></label>
+    </div><div class="err" id="err-limit" role="alert"></div><div class="sec-foot">${past ? `Applies to ${esc(monthTitle(M))} only.` : `Applies to ${esc(monthTitle(M))} and later months. Earlier months keep their own limits.`}</div></div>
+    <div class="section"><div class="group">
+      <label class="row"><span class="grow"><div>Roll over</div></span><input class="switch" type="checkbox" role="switch" data-field="rollover" id="s-rollover" ${d.rollover ? 'checked' : ''}></label>
+    </div><div class="sec-foot">What's left at the end of each month (or what you overspent) carries into the next month${c.rollover && c.rolloverFrom ? `, starting ${esc(monthTitle(c.rolloverFrom))}` : `, starting ${esc(monthTitle(M))}`}. Good for things that don't happen every month, like gifts or car repairs.</div></div>
+    <div class="group">
+      <button class="row link" data-act="edit-cat-details">${icon('settings')}<span>Name, color and icon</span></button>
+      <button class="row link" data-act="cat-history">${icon('list')}<span>See ${esc(c.name)} spending</span></button>
+    </div>
+    <div class="group"><button class="row danger" data-act="archive-cat">Delete category</button></div>`);
+}
+function sheetCatEdit(sh, d) {
+  const isNew = !sh.id;
+  return shell(isNew ? 'New category' : 'Edit category', isNew ? 'Add' : 'Save', `
+    <div class="group"><label class="row"><input class="wide" type="text" placeholder="Name" autocomplete="off" aria-label="Name" maxlength="40" ${field(d.name, 'name')} data-autofocus></label></div>
+    ${isNew ? `<div class="section"><div class="group">
+      <label class="row"><span class="grow"><div>Monthly limit</div></span><input class="switch" type="checkbox" role="switch" data-field="hasLimit" id="s-hasLimit" ${d.hasLimit ? 'checked' : ''}></label>
+      <label class="row" ${d.hasLimit ? '' : 'hidden'} id="limit-row"><span class="grow"><div>Limit</div></span><span class="muted">$</span><input class="right num" type="text" inputmode="decimal" placeholder="0" aria-label="Limit in dollars" ${field(d.limit, 'limit')}></label>
+    </div><div class="err" id="err-limit" role="alert"></div><div class="sec-foot">Starts this month. You can change it on the Plan tab.</div></div>` : ''}
+    <div class="section"><div class="sec-head"><span>Color</span></div><div class="group"><div class="swatches" role="radiogroup" aria-label="Color">
+      ${PALETTE.map(([h, n]) => `<button class="swatch" role="radio" style="background:${h}" data-act="pick-color" data-color="${h}" aria-label="${n}" aria-checked="${h === d.color}">${h === d.color ? icon('check') : ''}</button>`).join('')}
+    </div></div></div>
+    <div class="section"><div class="sec-head"><span>Icon</span></div><div class="group"><div class="swatches" role="radiogroup" aria-label="Icon" style="--c:${esc(d.color)}" id="icon-grid">
+      ${CAT_ICONS.map(([n, label]) => `<button class="icon-pick" role="radio" data-act="pick-icon" data-icon="${n}" aria-label="${label}" aria-checked="${n === d.icon}">${icon(n)}</button>`).join('')}
+    </div></div></div>`);
+}
+function sheetMove(sh, d) {
+  const cats = activeCats(), M = sh.month;
+  return shell('Move money', 'Move', `
+    <div class="section"><div class="group"><label class="amount"><span>$</span><input type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Amount" ${field(d.amount, 'amount')} data-autofocus></label></div><div class="err" id="err-amount" role="alert"></div></div>
+    <div class="group">
+      <label class="row"><span class="grow"><div>From</div></span><select ${field(d.from, 'from')} aria-label="From category"><option value="">Choose</option>${catOptions(d.from, cats)}</select></label>
+      <label class="row"><span class="grow"><div>To</div></span><select ${field(d.to, 'to')} aria-label="To category"><option value="">Choose</option>${catOptions(d.to, cats)}</select></label>
+      <label class="row"><input class="wide" type="text" placeholder="Note (optional)" autocomplete="off" aria-label="Note" ${field(d.note, 'note')}></label>
+    </div>
+    <section class="card" id="move-preview" aria-live="polite"></section>
+    <div class="sec-foot">Moves part of one category's ${esc(monthTitle(M))} limit to another. Your total allowance stays ${money(planFor(M).total)}.</div>`);
+}
+function movePreview(sh, d) {
+  const M = sh.month, a = parseCents(d.amount), from = S.categories[d.from], to = S.categories[d.to];
+  if (!from || !to || !a.cents) return { html: '<div class="muted small">Choose an amount and two categories.</div>', ok: false, error: a.error };
+  if (from.id === to.id) return { html: '<div class="muted small">Choose two different categories.</div>', ok: false };
+  const fs = catState(from, M), ts = catState(to, M), fl = fs.limit || 0;
+  if (a.cents > fl) return { html: `<div class="verdict s-bad">${icon('stop')}<span>${esc(from.name)} has a ${money(fl)} limit this month, so you can move at most that.</span></div>`, ok: false };
+  const line = (c, st, delta) => `<div class="kv"><span>${esc(c.name)}</span><span class="num">limit ${whole(st.limit || 0)} → <b>${whole((st.limit || 0) + delta)}</b> · left <b class="${st.available + delta < 0 ? 'neg' : ''}">${st.available + delta < 0 ? '−' : ''}${money(Math.abs(st.available + delta))}</b></span></div>`;
+  const warn = fs.available - a.cents < 0 ? `<div class="muted small s-warn">This leaves ${esc(from.name)} ${money(-(fs.available - a.cents))} over its limit.</div>` : '';
+  return { html: line(from, fs, -a.cents) + line(to, ts, a.cents) + warn, ok: true };
+}
+function sheetTotal(sh, d) {
+  const M = sh.month;
+  return shell('Monthly allowance', 'Save', `
+    <div class="section"><div class="group"><label class="amount"><span>$</span><input type="text" inputmode="decimal" placeholder="800" autocomplete="off" aria-label="Monthly allowance" ${field(d.amount, 'amount')} data-autofocus></label></div><div class="err" id="err-amount" role="alert"></div>
+    <div class="sec-foot">${M < curMonth() ? `Changes ${esc(monthTitle(M))} only.` : `Applies to ${esc(monthTitle(M))} and later months. Earlier months keep the allowance they had.`} This is what you plan to spend on day-to-day things, not your income.</div></div>`);
+}
+
+// ---------- Recurring ----------
+function recurringDraft(r) {
+  if (r) return { name: r.name, amount: editable(r.amount), categoryId: r.categoryId, cadence: r.cadence, anchor: r.anchor, day2: String(r.day2 || 15),
+    hasEnd: !!r.endDate, endDate: r.endDate || '', paused: r.paused };
+  return { name: '', amount: '', categoryId: '', cadence: 'monthly', anchor: today(), day2: '15', hasEnd: false, endDate: '', paused: false };
+}
+function draftToRecurring(d, base) {
+  const anchor = isDate(d.anchor) ? d.anchor : today();
+  const r = Object.assign({}, base || {}, {
+    name: d.name.trim(), amount: parseCents(d.amount).cents, categoryId: d.categoryId, cadence: d.cadence, anchor, day: nums(anchor)[2],
+    day2: d.cadence === 'twicemonthly' ? Number(d.day2) : null, endDate: d.hasEnd && isDate(d.endDate) ? d.endDate : null, paused: !!d.paused
+  });
+  if (!base) { r.id = uid(); r.skipped = []; r.postedThrough = addDays(anchor, -1); }
+  return r;
+}
+function sheetRecurring(sh, d) {
+  const r = sh.id ? S.recurring[sh.id] : null;
+  const cats = choicesFor([d.categoryId]);
+  return shell(r ? 'Edit recurring' : 'New recurring', r ? 'Save' : 'Add', `
+    <div class="group">
+      <label class="row"><input class="wide" type="text" placeholder="Name, such as Spotify" autocomplete="off" aria-label="Name" maxlength="60" ${field(d.name, 'name')} data-autofocus></label>
+      <label class="row"><span class="grow"><div>Amount</div></span><span class="muted">$</span><input class="right num" type="text" inputmode="decimal" placeholder="0.00" aria-label="Amount in dollars" ${field(d.amount, 'amount')}></label>
+      <label class="row"><span class="grow"><div>Category</div></span><select ${field(d.categoryId, 'categoryId')} aria-label="Category"><option value="">Choose</option>${catOptions(d.categoryId, cats)}</select></label>
+    </div><div class="err" id="err-amount" role="alert"></div>
+    <div class="section"><div class="group">
+      <label class="row"><span class="grow"><div>How often</div></span><select ${field(d.cadence, 'cadence')} aria-label="How often">${CADENCES.map(([v, l]) => `<option value="${v}" ${d.cadence === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="row"><span class="grow"><div>${r ? 'Schedule starts' : 'Next payment'}</div></span><input type="date" ${field(d.anchor, 'anchor')}></label>
+      <label class="row" ${d.cadence === 'twicemonthly' ? '' : 'hidden'} id="day2-row"><span class="grow"><div>Second day each month</div></span><select ${field(d.day2, 'day2')} aria-label="Second day each month">
+        ${Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}" ${String(i + 1) === String(d.day2) ? 'selected' : ''}>${ordinal(i + 1)}</option>`).join('')}</select></label>
+      <label class="row"><span class="grow"><div>Ends</div></span><input class="switch" type="checkbox" role="switch" data-field="hasEnd" id="s-hasEnd" ${d.hasEnd ? 'checked' : ''}></label>
+      <label class="row" ${d.hasEnd ? '' : 'hidden'} id="end-row"><span class="grow"><div>Last payment on or before</div></span><input type="date" ${field(d.endDate, 'endDate')}></label>
+      ${r ? `<label class="row"><span class="grow"><div>Paused</div></span><input class="switch" type="checkbox" role="switch" data-field="paused" id="s-paused" ${d.paused ? 'checked' : ''}></label>` : ''}
+    </div><div class="err" id="err-dates" role="alert"></div><div class="sec-foot" id="rec-preview"></div></div>
+    ${r ? `<div class="group">
+      <button class="row link" data-act="skip-next">${icon('skip')}<span>Skip the next payment</span></button>
+      <button class="row link" data-act="rec-history">${icon('list')}<span>See payments already added</span></button>
+    </div>
+    <div class="section"><div class="group"><button class="row danger" data-act="delete-rec">Stop this payment</button></div><div class="sec-foot">Payments already added stay in your spending.</div></div>` : ''}`);
+}
+function recurringPreview(sh, d) {
+  const errs = {};
+  const a = parseCents(d.amount);
+  if (a.error) errs.amount = a.error;
+  if (!isDate(d.anchor)) errs.dates = 'Choose a date.';
+  else if (d.hasEnd && (!isDate(d.endDate) || d.endDate < d.anchor)) errs.dates = 'The end date has to be on or after the start date.';
+  let preview = '';
+  if (!errs.dates && a.cents) {
+    const base = sh.id ? S.recurring[sh.id] : null;
+    const r = draftToRecurring(d, base);
+    if (!sh.id) r.postedThrough = addDays(r.anchor, -1);
+    const next = r.paused ? [] : nextDates(r, 3);
+    const t = today();
+    const catchUp = !sh.id ? occurrences(r, r.anchor, t, 50).length : 0;
+    preview = r.paused ? 'Paused. No payments will be added until you turn this off.'
+      : next.length ? `Next: ${next.map(shortDate).join(', ')}. About ${money(perMonth(r))} a month.` : 'No more payments are scheduled.';
+    if (catchUp) preview += ` ${catchUp === 1 ? 'One payment' : `${catchUp} payments`} dated today or earlier will be added when you save.`;
+    if (d.cadence === 'monthly' || d.cadence === 'twicemonthly') { const day = nums(r.anchor)[2]; if (day > 28 || Number(d.day2) > 28) preview += ' Shorter months use their last day.'; }
+  }
+  return { errs, preview };
+}
+
+// ---------- Restore preview and sync choice ----------
+function sheetRestore(sh) {
+  const st = sh.state, list = Object.values(st.entries).map(e => e.date).sort();
+  const net = sum(Object.values(st.entries), e => sign(e) * e.amount);
+  const dropped = Object.values(sh.dropped).reduce((a, b) => a + b, 0);
+  return shell('Restore backup', 'Replace', `
+    <div class="card">
+      <div class="kv"><span>Saved</span><span>${sh.exportedAt ? esc(new Date(sh.exportedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })) : 'Unknown'}</span></div>
+      <div class="kv"><span>Entries</span><span class="num">${list.length}${list.length ? ` (${esc(shortDate(list[0]))} – ${esc(shortDate(list[list.length - 1]))})` : ''}</span></div>
+      <div class="kv"><span>Net spending</span><span class="num">${money(net)}</span></div>
+      <div class="kv"><span>Categories</span><span class="num">${Object.keys(st.categories).length}</span></div>
+      <div class="kv"><span>Recurring payments</span><span class="num">${Object.keys(st.recurring).length}</span></div>
+      <div class="kv"><span>Monthly plans</span><span class="num">${Object.keys(st.plans).length}</span></div>
+      ${sh.fromV1 ? '<div class="muted small">This backup is from the earlier version of Tally and will be converted.</div>' : ''}
+      ${dropped ? `<div class="small s-warn">${dropped} ${dropped === 1 ? 'record was' : 'records were'} unreadable and will be left out.</div>` : ''}
+    </div>
+    <div class="sec-foot">Replace removes everything currently in Tally${sync.user ? ' on all your signed-in devices' : ' on this device'} and loads this backup instead. Right after, you can tap Undo to go back.</div>`);
+}
+function sheetSyncChoice(sh) {
+  return shell('Combine your spending?', null, `
+    <div class="muted small">This device and your account both have spending in them. Choose what to keep.</div>
+    <button class="primary" data-act="sync-combine">${icon('swap')}<span>Combine both (recommended)</span></button>
+    <div class="sec-foot">Keeps every entry from both places. Categories with the same name are merged.</div>
+    <button class="secondary" data-act="sync-use-cloud">${icon('cloud')}<span>Use my account only</span></button>
+    <div class="sec-foot">Replaces what's on this device with your account's data. A copy of this device's data is kept so it can be restored from a backup.</div>`, { cancel: 'Sign out' });
+}
+
+// ---------- Validation for whichever sheet is open ----------
+function setErr(id, msg) { const el = document.getElementById(id); if (el) el.textContent = msg || ''; }
+function validateSheet() {
+  const sh = ui.sheet; if (!sh) return;
+  const btn = $('#sheet-save'), d = sh.draft;
+  let ok = true;
+  if (sh.kind === 'entry') {
+    const { errs } = entryErrors(d);
+    setErr('err-amount', d.amount ? errs.amount : '');
+    setErr('err-date', errs.date);
+    const ss = $('#split-status'); if (ss) { ss.textContent = errs.split || 'Splits add up to the total.'; ss.className = 'sec-foot num' + (errs.split && d.amount ? ' s-warn' : ''); }
+    ok = !Object.keys(errs).length;
+    const rn = $('#repeat-note');
+    if (rn) rn.textContent = d.repeat === 'none' ? 'Choose a schedule for subscriptions and bills that repeat.'
+      : `Tally will add this ${({ weekly: 'every week', biweekly: 'every 2 weeks', monthly: `on the ${ordinal(nums(isDate(d.date) ? d.date : today())[2])} of each month`, yearly: 'every year' })[d.repeat]} starting after ${isDate(d.date) ? shortDate(d.date) : 'this date'}. Manage it on the Plan tab.`;
+  } else if (sh.kind === 'afford') {
+    const res = affordResult(d);
+    $('#afford-result').innerHTML = res.html;
+    setErr('err-amount', d.amount ? res.error : '');
+    $('#afford-add').disabled = !res.ok;
+  } else if (sh.kind === 'catplan' || sh.kind === 'catedit') {
+    const lr = $('#limit-row'); if (lr) lr.hidden = !d.hasLimit;
+    let err = '';
+    if (d.hasLimit) { const p = parseCents(d.limit); err = p.empty ? 'Enter a limit, or turn the limit off.' : (p.error || ''); }
+    setErr('err-limit', d.hasLimit && d.limit ? err : '');
+    ok = !err && (sh.kind !== 'catedit' || d.name.trim() !== '');
+  } else if (sh.kind === 'move') {
+    const res = movePreview(sh, d);
+    $('#move-preview').innerHTML = res.html;
+    setErr('err-amount', d.amount ? res.error : '');
+    ok = res.ok;
+  } else if (sh.kind === 'total') {
+    const p = parseCents(d.amount);
+    setErr('err-amount', d.amount ? p.error : '');
+    ok = !!p.cents;
+  } else if (sh.kind === 'recurring') {
+    $('#day2-row').hidden = d.cadence !== 'twicemonthly';
+    $('#end-row').hidden = !d.hasEnd;
+    const { errs, preview } = recurringPreview(sh, d);
+    setErr('err-amount', d.amount ? errs.amount : '');
+    setErr('err-dates', errs.dates);
+    $('#rec-preview').textContent = preview;
+    ok = !errs.amount && !errs.dates && !!parseCents(d.amount).cents && d.name.trim() !== '' && !!d.categoryId;
+  }
+  if (btn) btn.disabled = !ok;
+}
+
+// ---------- Saving sheets ----------
+function saveSheet() {
+  const sh = ui.sheet; if (!sh) return;
+  const btn = $('#sheet-save'); if (!btn || btn.disabled) return;
+  const d = sh.draft;
+  if (sh.kind === 'entry') {
+    const { errs, cents } = entryErrors(d);
+    if (Object.keys(errs).length) return;
+    const parts = d.split ? d.parts.map(p => ({ categoryId: p.categoryId, amount: parseCents(p.amount).cents })) : [{ categoryId: d.categoryId, amount: cents }];
+    const base = sh.item;
+    let id = base ? base.id : uid(), recurringId = base ? base.recurringId : null;
+    if (!base && d.type === 'expense' && !d.split && d.repeat !== 'none') {
+      const r = { id: uid(), name: d.note.trim() || catFor(d.categoryId).name, amount: cents, categoryId: d.categoryId, cadence: d.repeat, anchor: d.date,
+        day: nums(d.date)[2], day2: null, endDate: null, paused: false, skipped: [], postedThrough: d.date };
+      put('recurring', r);
+      recurringId = r.id; id = occurrenceId(r, d.date);
+    }
+    put('entries', { id, type: d.type, date: d.date, amount: cents, parts, note: d.note.trim(), recurringId, ts: base ? base.ts : Date.now() });
+    if (d.date < S.settings.trackingStart) put('meta', Object.assign({}, S.settings, { trackingStart: d.date }));
+    toast(base ? 'Saved.' : (d.type === 'refund' ? 'Refund added.' : `Added ${money(cents)}.`));
+  } else if (sh.kind === 'catplan') {
+    const c = S.categories[sh.id], M = sh.month, st = catState(c, M);
+    const newLimit = d.hasLimit ? parseCents(d.limit).cents : null;
+    if (newLimit !== st.limit) editPlan(M, p => { p.limits[c.id] = newLimit; });
+    if (d.rollover !== !!c.rollover) {
+      put('categories', Object.assign({}, c, { rollover: d.rollover, rolloverFrom: d.rollover ? M : null }));
+    }
+  } else if (sh.kind === 'catedit') {
+    if (sh.id) put('categories', Object.assign({}, S.categories[sh.id], { name: d.name.trim(), color: d.color, icon: d.icon }));
+    else {
+      const id = uid(), limit = d.hasLimit ? parseCents(d.limit).cents : null;
+      const order = Math.max(-1, ...catList().map(c => c.order)) + 1;
+      put('categories', { id, name: d.name.trim(), color: d.color, icon: d.icon, order, archived: false, rollover: false, rolloverFrom: null, limit, createdMonth: curMonth() });
+      if (limit != null) editPlan(curMonth(), p => { p.limits[id] = limit; });
+    }
+  } else if (sh.kind === 'move') {
+    const res = movePreview(sh, d); if (!res.ok) return;
+    const cents = parseCents(d.amount).cents;
+    editPlan(sh.month, p => {
+      p.limits[d.from] = (p.limits[d.from] || 0) - cents;
+      p.limits[d.to] = (p.limits[d.to] || 0) + cents;
+      p.moves = (p.moves || []).concat([{ from: d.from, to: d.to, amount: cents, note: d.note.trim(), at: Date.now() }]);
+    });
+    toast(`Moved ${money(cents)} to ${catFor(d.to).name}.`);
+  } else if (sh.kind === 'total') {
+    const cents = parseCents(d.amount).cents;
+    editPlan(sh.month, p => { p.total = cents; });
+    if (sh.month >= curMonth() && !Object.keys(S.plans).some(k => k > sh.month)) put('meta', Object.assign({}, S.settings, { defaultBudget: cents }));
+  } else if (sh.kind === 'recurring') {
+    const base = sh.id ? S.recurring[sh.id] : null;
+    const r = draftToRecurring(d, base);
+    if (base && base.paused && !r.paused) r.postedThrough = addDays(today(), -1); // don't backfill the paused stretch
+    put('recurring', r);
+  } else if (sh.kind === 'restore') {
+    applyRestore(sh.state);
+  }
+  postDueRecurring();
+  closeSheet();
+  render();
+}
+
+// =====================================================================
+// Backup, restore and CSV
+// =====================================================================
+async function offerFile(name, text, type) {
+  try {
+    const file = new File([text], name, { type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return true; }
+  } catch (e) { if (e && e.name === 'AbortError') return false; }
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement('a'); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  return true;
+}
+async function exportBackup() {
+  const payload = { app: 'Tally', format: 'tally-backup', schema: SCHEMA, appVersion: APP_VERSION, exportedAt: new Date().toISOString(),
+    counts: { entries: Object.keys(S.entries).length, categories: Object.keys(S.categories).length, recurring: Object.keys(S.recurring).length, plans: Object.keys(S.plans).length },
+    data: S };
+  const ok = await offerFile(`tally-backup-${today()}.json`, JSON.stringify(payload, null, 1), 'application/json');
+  if (ok) { meta.lastBackupAt = Date.now(); meta.changesSinceBackup = 0; saveMeta(); toast('Backup saved.'); render(); }
+}
+function csvCell(v) {
+  let s = String(v == null ? '' : v);
+  if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = "'" + s; // stop spreadsheet formulas, keep negative numbers
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+async function exportCSV() {
+  const rows = [['Date', 'Type', 'Amount', 'Category', 'Note', 'Split', 'Recurring', 'Entry ID']];
+  for (const e of allEntries().slice().reverse()) {
+    for (const p of e.parts) {
+      rows.push([e.date, e.type === 'refund' ? 'Refund' : 'Expense', ((e.type === 'refund' ? -1 : 1) * p.amount / 100).toFixed(2),
+        catFor(p.categoryId).name, e.note, e.parts.length > 1 ? `${e.parts.length}-way split of ${(e.amount / 100).toFixed(2)}` : '',
+        e.recurringId && S.recurring[e.recurringId] ? S.recurring[e.recurringId].name : (e.recurringId ? 'Yes' : ''), e.id]);
+    }
+  }
+  const text = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  const ok = await offerFile(`tally-spending-${today()}.csv`, '﻿' + text, 'text/csv');
+  if (ok) toast('CSV exported. Refunds are negative amounts.');
+}
+function readBackup(file) {
+  if (file.size > 20 * 1024 * 1024) return toast('That file is too large to be a Tally backup.');
+  const reader = new FileReader();
+  reader.onload = () => {
+    let raw;
+    try { raw = JSON.parse(reader.result); } catch (e) { return toast("That file isn't a Tally backup."); }
+    let st, dropped = {}, fromV1 = false, exportedAt = null;
+    if (raw && raw.format === 'tally-backup' && raw.data) {
+      if (Number(raw.schema) > SCHEMA) return toast('That backup came from a newer version of Tally. Update the app first.');
+      const n = normalizeState(raw.data); st = n.state; dropped = n.dropped; exportedAt = raw.exportedAt;
+    } else if (raw && Array.isArray(raw.expenses) && Array.isArray(raw.categories)) {
+      st = migrateV1(raw); fromV1 = true;
+    } else return toast("That file isn't a Tally backup.");
+    openSheet({ kind: 'restore', state: st, dropped, fromV1, exportedAt, draft: {} });
+  };
+  reader.onerror = () => toast("Couldn't read that file.");
+  reader.readAsText(file);
+}
+function applyRestore(st) {
+  const before = JSON.stringify(S);
+  disk.set('tally-before-restore', before);
+  replaceState(st);
+  toast('Backup restored.', { label: 'Undo', run: () => { replaceState(normalizeState(JSON.parse(before)).state); toast('Restore undone.'); render(); } });
+}
+// Swaps in a whole new dataset, here and in the cloud.
+function replaceState(st) {
+  const old = S;
+  S = st; calcVersion++; persist();
+  meta.changesSinceBackup++; saveMeta();
+  if (cloudLinked()) {
+    const sets = [], dels = [];
+    for (const col of COLS) {
+      const nowMap = col === 'meta' ? { settings: S.settings } : S[col];
+      const oldMap = col === 'meta' ? { settings: old.settings } : old[col];
+      for (const [k, v] of Object.entries(nowMap)) sets.push({ col, id: k, data: v });
+      for (const k of Object.keys(oldMap)) if (!has(nowMap, k)) dels.push({ col, id: k });
+    }
+    sync.cloud.writeMany(sync.user.uid, sets, dels).catch(syncFailed);
+  }
+}
+
+// =====================================================================
+// Sync with Firebase
+// =====================================================================
+const sync = { cloud: null, user: null, status: 'off', error: '', stop: null, loaded: new Set(), pending: {}, loadError: '' };
+const cloudLinked = () => !!(sync.cloud && sync.user && meta.syncUid === sync.user.uid);
+function cloudPut(col, key, obj) { if (cloudLinked()) sync.cloud.put(sync.user.uid, col, key, obj).catch(syncFailed); }
+function cloudRemove(col, key) { if (cloudLinked()) sync.cloud.remove(sync.user.uid, col, key).catch(syncFailed); }
+function friendlyError(e) {
+  const code = (e && (e.code || e.message)) || '';
+  if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(code)) return 'Email or password is incorrect.';
+  if (/email-already-in-use/.test(code)) return 'There is already an account with this email. Sign in instead.';
+  if (/weak-password/.test(code)) return 'Use a password with at least 6 characters.';
+  if (/invalid-email/.test(code)) return "That email address doesn't look right.";
+  if (/missing-password/.test(code)) return 'Enter your password.';
+  if (/network-request-failed|unavailable/.test(code)) return "No connection. Try again when you're online.";
+  if (/too-many-requests/.test(code)) return 'Too many attempts. Wait a few minutes and try again.';
+  if (/operation-not-allowed|configuration-not-found/.test(code)) return 'Email sign-in is not turned on in Firebase yet (Authentication → Sign-in method).';
+  if (/permission-denied/.test(code)) return 'Sync was blocked. Check the Firestore rules in Firebase.';
+  if (/resource-exhausted|quota/.test(code)) return "Firebase's free daily limit was reached. Sync resumes tomorrow; your changes are kept on this device.";
+  return 'Something went wrong with sync. Your changes are kept on this device.';
+}
+function syncFailed(e) { sync.status = 'error'; sync.error = friendlyError(e); scheduleRender(); }
+
+async function startSync() {
+  const config = FIREBASE_CONFIG || window.__TALLY_TEST_CONFIG__;
+  if (!config) return;
+  try {
+    const factory = window.__TALLY_TEST_CLOUD__ || (await import('./cloud.js')).createCloud;
+    sync.cloud = factory(config, window.__TALLY_CLOUD_OPTIONS__ || {});
+  } catch (e) {
+    sync.loadError = "Sync couldn't load. Open Tally once while online to finish setting it up.";
+    render(); return;
+  }
+  sync.status = 'signedout';
+  sync.cloud.onAuth(onAuthChange);
+  render();
+}
+async function onAuthChange(user) {
+  if (sync.stop) { sync.stop(); sync.stop = null; }
+  sync.user = user; sync.loaded = new Set(); sync.pending = {}; sync.error = '';
+  canGenerate = true;
+  if (!user) { sync.status = 'signedout'; if (meta.syncUid) { meta.syncUid = null; saveMeta(); } render(); return; }
+  sync.status = 'connecting'; render();
+  if (meta.syncUid === user.uid) { beginListening(); return; }
+  // First sign-in on this device for this account: decide how local and account data come together.
+  let cloudData;
+  try { cloudData = await sync.cloud.fetchAll(user.uid); } catch (e) {
+    sync.status = 'error'; sync.error = /unavailable|network|offline/i.test((e && (e.code || e.message)) || '') ? 'Connect to the internet to finish turning on sync.' : friendlyError(e);
+    render(); return;
+  }
+  const cloudEmpty = !Object.keys(cloudData.entries || {}).length && !Object.keys(cloudData.categories || {}).length;
+  const localHasData = Object.keys(S.entries).length > 0 || Object.keys(S.recurring).length > 0;
+  if (cloudEmpty) { await linkAndUpload(user); }
+  else if (!localHasData) { adoptCloud(cloudData); finishLink(user); }
+  else if (meta.lastUid === user.uid) { combineWith(cloudData); await linkAndUpload(user); }
+  else openSheet({ kind: 'syncchoice', cloudData, draft: {} });
+}
+function stateFromCloud(c) {
+  return normalizeState({ settings: (c.meta || {}).settings || S.settings, categories: c.categories || {}, plans: c.plans || {}, recurring: c.recurring || {}, entries: c.entries || {} }).state;
+}
+function adoptCloud(cloudData) {
+  disk.set('tally-before-sync', JSON.stringify(S));
+  S = stateFromCloud(cloudData); calcVersion++; persist();
+}
+const newer = (a, b) => (!b ? a : !a ? b : ((a.updatedAt || 0) >= (b.updatedAt || 0) ? a : b));
+function combineWith(cloudData) {
+  disk.set('tally-before-sync', JSON.stringify(S));
+  const C = stateFromCloud(cloudData), L = S;
+  const byName = {}; for (const c of Object.values(C.categories)) byName[c.name.trim().toLowerCase()] = c.id;
+  const remap = {}; for (const c of Object.values(L.categories)) { const hit = byName[c.name.trim().toLowerCase()]; if (hit && hit !== c.id) remap[c.id] = hit; }
+  const rc = id => remap[id] || id;
+  const out = { settings: newer(L.settings, C.settings), categories: Object.assign({}, C.categories), plans: Object.assign({}, C.plans),
+    recurring: Object.assign({}, C.recurring), entries: Object.assign({}, C.entries) };
+  out.settings = Object.assign({}, out.settings, { trackingStart: [L.settings.trackingStart, C.settings.trackingStart].sort()[0] });
+  for (const c of Object.values(L.categories)) if (!remap[c.id]) out.categories[c.id] = newer(c, C.categories[c.id]);
+  for (const e of Object.values(L.entries)) out.entries[e.id] = newer(Object.assign({}, e, { parts: e.parts.map(p => ({ categoryId: rc(p.categoryId), amount: p.amount })) }), C.entries[e.id]);
+  for (const r of Object.values(L.recurring)) out.recurring[r.id] = newer(Object.assign({}, r, { categoryId: rc(r.categoryId) }), C.recurring[r.id]);
+  for (const [m, p] of Object.entries(L.plans)) {
+    const limits = {}; for (const [k, v] of Object.entries(p.limits || {})) limits[rc(k)] = v;
+    out.plans[m] = newer(Object.assign({}, p, { limits }), C.plans[m]);
+  }
+  S = normalizeState(out).state; calcVersion++; persist();
+}
+async function linkAndUpload(user) {
+  const sets = [];
+  for (const col of COLS) {
+    const map = col === 'meta' ? { settings: S.settings } : S[col];
+    for (const [k, v] of Object.entries(map)) sets.push({ col, id: k, data: v });
+  }
+  try { await sync.cloud.writeMany(user.uid, sets, []); } catch (e) { syncFailed(e); return; }
+  finishLink(user);
+}
+function finishLink(user) {
+  meta.syncUid = user.uid; meta.lastUid = user.uid; saveMeta();
+  closeSheet();
+  beginListening();
+  toast('Sync is on. Sign in with the same email on your other devices.');
+}
+function beginListening() {
+  const user = sync.user; if (!user) return;
+  canGenerate = false; // wait for the account's data before adding recurring payments
+  sync.status = 'connecting'; render();
+  sync.stop = sync.cloud.listen(user.uid, (col, docs, info) => {
+    if (!sync.user || sync.user.uid !== user.uid) return;
+    if (col === 'meta') { if (docs.settings) S.settings = normalizeState({ settings: docs.settings }, { fill: false }).state.settings; }
+    else S[col] = normalizeState({ [col]: docs }, { fill: false }).state[col];
+    sync.loaded.add(col); sync.pending[col] = info.pending;
+    calcVersion++; persist();
+    if (sync.loaded.size === COLS.length) {
+      const pending = Object.values(sync.pending).some(Boolean);
+      sync.status = pending ? (navigator.onLine === false ? 'offline' : 'saving') : (info.fromCache && navigator.onLine === false ? 'offline' : 'synced');
+      if (!pending && !info.fromCache) { meta.lastSyncedAt = Date.now(); saveMeta(); }
+      if (!canGenerate) { canGenerate = true; postDueRecurring(); }
+    }
+    scheduleRender();
+  }, syncFailed);
+}
+async function authAction(kind) {
+  const a = ui.auth; a.email = ($('#a-email') || {}).value || a.email; a.password = ($('#a-password') || {}).value || '';
+  a.error = ''; a.info = '';
+  if (!a.email.trim()) { a.error = 'Enter your email.'; return render(); }
+  if (kind !== 'reset' && !a.password) { a.error = 'Enter your password.'; return render(); }
+  a.busy = true; render();
+  try {
+    if (kind === 'in') await sync.cloud.signIn(a.email.trim(), a.password);
+    else if (kind === 'up') await sync.cloud.signUp(a.email.trim(), a.password);
+    else { await sync.cloud.resetPassword(a.email.trim()); a.info = `If there's an account for ${a.email.trim()}, a reset email is on its way.`; }
+    a.password = '';
+  } catch (e) { a.error = friendlyError(e); }
+  a.busy = false; render();
+}
+
+// =====================================================================
+// Toast
+// =====================================================================
+let toastTimer = null, toastAction = null;
+function toast(msg, action) {
+  const el = $('#toast');
+  toastAction = action || null;
+  el.innerHTML = `<span>${esc(msg)}</span>${action ? `<button data-act="toast-action">${esc(action.label)}</button>` : ''}`;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; toastAction = null; }, action ? 6000 : 3200);
+}
+
+// =====================================================================
+// Events
+// =====================================================================
+function setTab(tab) { ui.tab = tab; ui.page = null; ui.reorder = false; render(); window.scrollTo(0, 0); }
+document.addEventListener('click', ev => {
+  if (ev.target.id === 'sheet') return closeSheet();
+  const t = ev.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  const act = t.dataset.act, id = t.dataset.id, sh = ui.sheet, d = sh && sh.draft;
+  switch (act) {
+    case 'tab': if (ui.tab === t.dataset.tab && !ui.page) window.scrollTo(0, 0); else setTab(t.dataset.tab); break;
+    case 'back': ui.page = null; render(); window.scrollTo(0, 0); break;
+    case 'open-month': ui.page = { month: t.dataset.month }; render(); window.scrollTo(0, 0); break;
+    case 'hide-hint': meta.hintOff = true; saveMeta(); render(); break;
+    case 'toast-action': { const a = toastAction; $('#toast').hidden = true; toastAction = null; if (a) a.run(); break; }
+
+    case 'filter-cat': {
+      const M = t.dataset.month;
+      ui.filters = { q: '', period: M === curMonth() ? 'current' : M, cat: id, type: 'all' };
+      setTab('spending'); break;
+    }
+    case 'clear-filters': ui.filters = { q: '', period: 'current', cat: 'all', type: 'all' }; render(); break;
+
+    case 'add':
+      if (!activeCats().length) { toast('Add a category on the Plan tab first.'); break; }
+      openSheet({ kind: 'entry', item: null, draft: entryDraft(null) }); break;
+    case 'edit-entry': { const e = S.entries[id]; if (e) openSheet({ kind: 'entry', item: e, draft: entryDraft(e) }); break; }
+    case 'set-type': d.type = t.dataset.type; if (d.type === 'refund') d.repeat = 'none'; renderSheet(); break;
+    case 'pick-cat':
+      d.categoryId = id;
+      $$('#sheet .chip').forEach(b => b.setAttribute('aria-checked', String(b.dataset.id === id)));
+      validateSheet(); break;
+    case 'split': {
+      const a = parseCents(d.amount).cents;
+      d.split = true; d.repeat = 'none';
+      d.parts = [{ categoryId: d.categoryId || '', amount: a ? editable(a) : '' }, { categoryId: '', amount: '' }];
+      renderSheet(); break;
+    }
+    case 'unsplit': d.split = false; d.categoryId = (d.parts[0] && d.parts[0].categoryId) || d.categoryId; renderSheet(); break;
+    case 'add-part': {
+      const a = parseCents(d.amount).cents || 0, used = sum(d.parts, p => parseCents(p.amount).cents || 0);
+      d.parts.push({ categoryId: '', amount: a > used ? editable(a - used) : '' }); renderSheet(); break;
+    }
+    case 'remove-part': d.parts.splice(Number(t.dataset.i), 1); renderSheet(); break;
+    case 'delete-entry': {
+      const e = sh.item;
+      removeDoc('entries', e.id);
+      if (e.recurringId && S.recurring[e.recurringId] && e.id === `rec_${e.recurringId}_${e.date}`) {
+        const r = S.recurring[e.recurringId];
+        put('recurring', Object.assign({}, r, { skipped: (r.skipped || []).concat([e.date]) }));
+      }
+      closeSheet(); render();
+      toast('Entry deleted.', { label: 'Undo', run: () => { put('entries', e); render(); toast('Entry restored.'); } });
+      break;
+    }
+
+    case 'afford': openSheet({ kind: 'afford', draft: { amount: '', categoryId: '' } }); break;
+    case 'afford-add': {
+      const a = parseCents(d.amount).cents; if (!a) break;
+      openSheet({ kind: 'entry', item: null, draft: entryDraft(null, { amount: editable(a), categoryId: d.categoryId || null }) }); break;
+    }
+
+    case 'plan-month': ui.planMonth = (t.dataset.dir === '1' ? nextMonth : prevMonth)(ui.planMonth || curMonth()); render(); break;
+    case 'edit-total': { const M = ui.planMonth || curMonth(); openSheet({ kind: 'total', month: M, draft: { amount: editable(planFor(M).total) } }); break; }
+    case 'cat-plan': {
+      const c = S.categories[id], M = ui.planMonth || curMonth(), st = catState(c, M);
+      openSheet({ kind: 'catplan', id, month: M, draft: { hasLimit: st.limit != null, limit: st.limit != null ? editable(st.limit) : '', rollover: !!c.rollover } }); break;
+    }
+    case 'edit-cat-details': { const c = S.categories[sh.id]; openSheet({ kind: 'catedit', id: c.id, draft: { name: c.name, color: c.color, icon: c.icon } }); break; }
+    case 'cat-history': ui.filters = { q: '', period: 'all', cat: sh.id, type: 'all' }; closeSheet(); setTab('spending'); break;
+    case 'new-cat': openSheet({ kind: 'catedit', id: null, draft: { name: '', color: PALETTE[0][0], icon: CAT_ICONS[0][0], hasLimit: false, limit: '' } }); break;
+    case 'pick-color':
+      d.color = t.dataset.color;
+      $$('#sheet .swatch').forEach(b => { const on = b.dataset.color === d.color; b.setAttribute('aria-checked', String(on)); b.innerHTML = on ? icon('check') : ''; });
+      $('#icon-grid').style.setProperty('--c', d.color); break;
+    case 'pick-icon':
+      d.icon = t.dataset.icon;
+      $$('#sheet .icon-pick').forEach(b => b.setAttribute('aria-checked', String(b.dataset.icon === d.icon))); break;
+    case 'archive-cat': {
+      const c = S.categories[sh.id];
+      const used = Object.values(S.entries).some(e => e.parts.some(p => p.categoryId === c.id)) || Object.values(S.recurring).some(r => r.categoryId === c.id);
+      if (!confirm(used ? `Archive ${c.name}? Its past spending stays in your history, and you can restore it in Settings.` : `Delete ${c.name}?`)) break;
+      if (used) put('categories', Object.assign({}, c, { archived: true })); else removeDoc('categories', c.id);
+      closeSheet(); render(); break;
+    }
+    case 'restore-cat': { const c = S.categories[id]; if (c) { put('categories', Object.assign({}, c, { archived: false })); render(); } break; }
+    case 'toggle-reorder': ui.reorder = !ui.reorder; render(); break;
+    case 'move-cat': {
+      const list = activeCats(), i = list.findIndex(c => c.id === id), j = i + Number(t.dataset.dir);
+      if (i < 0 || j < 0 || j >= list.length) break;
+      [list[i], list[j]] = [list[j], list[i]];
+      list.forEach((c, k) => { if (c.order !== k) put('categories', Object.assign({}, c, { order: k })); });
+      render(); break;
+    }
+    case 'move-money': openSheet({ kind: 'move', month: ui.planMonth || curMonth(), draft: { amount: '', from: '', to: '', note: '' } }); break;
+
+    case 'new-rec':
+      if (!activeCats().length) { toast('Add a category first.'); break; }
+      openSheet({ kind: 'recurring', id: null, draft: recurringDraft(null) }); break;
+    case 'edit-rec': { const r = S.recurring[id]; if (r) openSheet({ kind: 'recurring', id, draft: recurringDraft(r) }); break; }
+    case 'skip-next': {
+      const r = S.recurring[sh.id], next = nextDates(r, 1)[0];
+      if (!next) { toast('There is no upcoming payment to skip.'); break; }
+      put('recurring', Object.assign({}, r, { skipped: (r.skipped || []).concat([next]) }));
+      toast(`Skipped ${shortDate(next)}.`, { label: 'Undo', run: () => { const r2 = S.recurring[r.id]; if (r2) put('recurring', Object.assign({}, r2, { skipped: r2.skipped.filter(x => x !== next) })); render(); } });
+      renderSheet(); render(); break;
+    }
+    case 'rec-history': ui.filters = { q: S.recurring[sh.id].name, period: 'all', cat: 'all', type: 'recurring' }; closeSheet(); setTab('spending'); break;
+    case 'delete-rec': {
+      const r = S.recurring[sh.id];
+      if (!confirm(`Stop ${r.name}? Payments already added stay in your spending.`)) break;
+      removeDoc('recurring', r.id); closeSheet(); render(); break;
+    }
+
+    case 'close-sheet':
+      if (sh && sh.kind === 'syncchoice') { sync.cloud.signOut(); }
+      closeSheet(); break;
+    case 'save-sheet': saveSheet(); break;
+    case 'sync-combine': { const u = sync.user; combineWith(sh.cloudData); closeSheet(); linkAndUpload(u); render(); break; }
+    case 'sync-use-cloud': { const u = sync.user; adoptCloud(sh.cloudData); finishLink(u); render(); break; }
+
+    case 'export': exportBackup(); break;
+    case 'import': $('#restore-file').click(); break;
+    case 'csv': exportCSV(); break;
+    case 'sign-in': ev.preventDefault(); authAction('in'); break;
+    case 'sign-up': authAction('up'); break;
+    case 'reset-password': authAction('reset'); break;
+    case 'sign-out': sync.cloud.signOut(); toast('Signed out. Your spending is still on this device.'); break;
+  }
+});
+document.addEventListener('toggle', ev => { if (ev.target.classList && ev.target.classList.contains('calc')) ui.calcOpen = ev.target.open; }, true);
+document.addEventListener('submit', ev => { if (ev.target.id === 'auth-form') { ev.preventDefault(); authAction('in'); } });
+function onFieldChange(ev) {
+  const t = ev.target;
+  if (ui.sheet && t.closest('#sheet')) {
+    const d = ui.sheet.draft;
+    if (t.dataset.field) d[t.dataset.field] = t.type === 'checkbox' ? t.checked : t.value;
+    if (t.dataset.part != null) d.parts[Number(t.dataset.part)][t.dataset.pf] = t.value;
+    validateSheet();
+    return;
+  }
+  if (t.dataset.filter) {
+    const key = t.dataset.filter;
+    ui.filters[key] = t.value;
+    if (key === 'q') { clearTimeout(onFieldChange.timer); onFieldChange.timer = setTimeout(render, 120); return; }
+    render();
+  }
+  if (t.id === 'a-email' && ui.auth) ui.auth.email = t.value;
+}
+document.addEventListener('input', onFieldChange);
+document.addEventListener('change', ev => {
+  if (ev.target.id === 'restore-file') { const f = ev.target.files && ev.target.files[0]; if (f) readBackup(f); ev.target.value = ''; return; }
+  onFieldChange(ev);
+});
+document.addEventListener('keydown', ev => {
+  if (!ui.sheet) return;
+  if (ev.key === 'Escape') { ev.preventDefault(); if (ui.sheet.kind === 'syncchoice') sync.cloud.signOut(); closeSheet(); return; }
+  if (ev.key === 'Tab') { // keep keyboard focus inside the open sheet
+    const items = $$('#sheet button:not([disabled]), #sheet input:not([type=hidden]), #sheet select, #sheet [tabindex="-1"]').filter(x => x.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+  }
+  if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && ev.target.type !== 'checkbox') { ev.preventDefault(); saveSheet(); }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { calcVersion++; if (postDueRecurring() || !ui.sheet) render(); }
+});
+window.addEventListener('online', () => { if (sync.user && sync.status === 'offline') { sync.status = 'saving'; scheduleRender(); } });
+window.addEventListener('offline', () => { if (sync.user) { sync.status = 'offline'; scheduleRender(); } });
+
+// =====================================================================
+// Start
+// =====================================================================
+postDueRecurring();
+render();
+startSync();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
