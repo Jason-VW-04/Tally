@@ -252,6 +252,36 @@ details.calc[open] summary svg { transform: rotate(90deg); }
 #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 20; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 20px; font-size: 14px; max-width: calc(100% - 32px); display: flex; gap: 14px; align-items: center; }
 #toast button { color: var(--bg); font-weight: 700; text-decoration: underline; }
 
+/* Overview extras */
+.btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-pair .secondary { font-size: 15px; padding: 13px 8px; }
+.btn-pair .secondary svg { font-size: 18px; }
+.pace svg { display: block; width: 100%; height: auto; }
+.pace .axis { stroke: var(--sep); stroke-width: 1; }
+.pace .gridline { stroke: var(--sep); stroke-width: 1; stroke-dasharray: 2 3; }
+.pace .paceline { stroke: var(--fg2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.pace .lbl { fill: var(--fg2); font-size: 10px; font-family: var(--font); }
+.goalbar { margin: 6px 0 4px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 600; color: var(--accent); background: var(--fill); padding: 7px 12px; border-radius: 16px; flex: none; white-space: nowrap; }
+.pill svg { font-size: 15px; }
+.pills { display: inline-flex; gap: 8px; flex: none; }
+.row.stack { flex-wrap: wrap; row-gap: 8px; }
+.row.stack .pills { width: 100%; padding-left: 32px; }
+.export-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 14px; padding: 0 4px; }
+select.pick { appearance: none; -webkit-appearance: none; align-self: flex-start; background: var(--fill); border: 0; border-radius: 16px; padding: 7px 14px; font-size: 15px; font-weight: 600; color: var(--fg); max-width: 100%; }
+.bars.tight { gap: 5px; }
+.bars.tight .lab { font-size: 10px; }
+.bva { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+.bva + .bva { border-top: 1px solid var(--sep); padding-top: 10px; }
+.bva-top { display: flex; align-items: center; gap: 10px; }
+.bva-top .name { flex: 1; min-width: 0; font-weight: 500; }
+.recent-row { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
+.recent-row::-webkit-scrollbar { display: none; }
+.recent { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; background: var(--card); border-radius: 12px; padding: 8px 12px; max-width: 160px; font-size: 13px; }
+.recent b { font-size: 15px; }
+.recent span { color: var(--fg2); max-width: 136px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggest { font-size: 13px; color: var(--accent); padding: 0 16px; }
+
 @media (min-width: 900px) {
   #view.wide { max-width: 1040px; }
   .ov { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -269,9 +299,9 @@ details.calc[open] summary svg { transform: rotate(90deg); }
 
 <script>
 'use strict';
-const ICONS = {"cart": "<path d=\"m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18\"/><path d=\"M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25\"/><circle cx=\"18\" cy=\"20\" r=\"2\"/><circle cx=\"8\" cy=\"20\" r=\"2\"/>", "utensils": "<path d=\"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\"/><path d=\"M7 2v20\"/><path d=\"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7\"/>", "film": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M7 3v18\"/><path d=\"M3 7.5h4\"/><path d=\"M3 12h18\"/><path d=\"M3 16.5h4\"/><path d=\"M17 3v18\"/><path d=\"M17 7.5h4\"/><path d=\"M17 16.5h4\"/>", "fuel": "<path d=\"M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5\"/><path d=\"M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16\"/><path d=\"M2 21h13\"/><path d=\"M3 9h11\"/>", "bag": "<path d=\"M16 10a4 4 0 0 1-8 0\"/><path d=\"M3.103 6.034h17.794\"/><path d=\"M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z\"/>", "grid": "<rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/>", "coffee": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "house": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>", "car": "<path d=\"M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/>", "gamepad": "<line x1=\"6\" x2=\"10\" y1=\"11\" y2=\"11\"/><line x1=\"8\" x2=\"8\" y1=\"9\" y2=\"13\"/><line x1=\"15\" x2=\"15.01\" y1=\"12\" y2=\"12\"/><line x1=\"18\" x2=\"18.01\" y1=\"10\" y2=\"10\"/><path d=\"M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z\"/>", "plane": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "gift": "<path d=\"M12 7v14\"/><path d=\"M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8\"/><path d=\"M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5\"/><rect x=\"3\" y=\"7\" width=\"18\" height=\"4\" rx=\"1\"/>", "heart": "<path d=\"M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5\"/>", "dumbbell": "<path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"/><path d=\"m2.5 21.5 1.4-1.4\"/><path d=\"m20.1 3.9 1.4-1.4\"/><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"/><path d=\"m9.6 14.4 4.8-4.8\"/>", "book": "<path d=\"M12 5v16\"/><path d=\"M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z\"/>", "paw": "<circle cx=\"11\" cy=\"4\" r=\"2\"/><circle cx=\"18\" cy=\"8\" r=\"2\"/><circle cx=\"20\" cy=\"16\" r=\"2\"/><path d=\"M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z\"/>", "shirt": "<path d=\"M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z\"/>", "music": "<path d=\"M9 18V5l12-2v13\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><circle cx=\"18\" cy=\"16\" r=\"3\"/>", "card": "<rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><line x1=\"2\" x2=\"22\" y1=\"10\" y2=\"10\"/><path d=\"M6 14h2\"/>", "wrench": "<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z\"/>", "medical": "<path d=\"M12 11v4\"/><path d=\"M14 13h-4\"/><path d=\"M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2\"/><path d=\"M18 6v14\"/><path d=\"M6 6v14\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/>", "sparkles": "<path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"/><path d=\"M20 2v4\"/><path d=\"M22 4h-4\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/>", "ticket": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "zap": "<path d=\"M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z\"/>", "plus": "<path d=\"M5 12h14\"/><path d=\"M12 5v14\"/>", "pie": "<path d=\"M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z\"/><path d=\"M21.21 15.89A10 10 0 1 1 8 2.83\"/>", "list": "<path d=\"M3 5h.01\"/><path d=\"M3 12h.01\"/><path d=\"M3 19h.01\"/><path d=\"M8 5h13\"/><path d=\"M8 12h13\"/><path d=\"M8 19h13\"/>", "bars": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "settings": "<path d=\"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "repeat": "<path d=\"m17 2 4 4-4 4\"/><path d=\"M3 11v-1a4 4 0 0 1 4-4h14\"/><path d=\"m7 22-4-4 4-4\"/><path d=\"M21 13v1a4 4 0 0 1-4 4H3\"/>", "right": "<path d=\"m9 18 6-6-6-6\"/>", "left": "<path d=\"m15 18-6-6 6-6\"/>", "up": "<path d=\"m18 15-6-6-6 6\"/>", "down": "<path d=\"m6 9 6 6 6-6\"/>", "check": "<path d=\"M20 6 9 17l-5-5\"/>", "ok": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m16 9-5.5 5.5L8 12\"/>", "alert": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\"/><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\"/>", "stop": "<path d=\"m15 9-6 6\"/><path d=\"M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z\"/><path d=\"m9 9 6 6\"/>", "x": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "download": "<path d=\"M12 15V3\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/>", "upload": "<path d=\"M12 3v12\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/>", "help": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"/><path d=\"M12 17h.01\"/>", "target": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/>", "calculator": "<rect width=\"16\" height=\"20\" x=\"4\" y=\"2\" rx=\"2\"/><line x1=\"8\" x2=\"16\" y1=\"6\" y2=\"6\"/><line x1=\"16\" x2=\"16\" y1=\"14\" y2=\"18\"/><path d=\"M16 10h.01\"/><path d=\"M12 10h.01\"/><path d=\"M8 10h.01\"/><path d=\"M12 14h.01\"/><path d=\"M8 14h.01\"/><path d=\"M12 18h.01\"/><path d=\"M8 18h.01\"/>", "search": "<path d=\"m21 21-4.34-4.34\"/><circle cx=\"11\" cy=\"11\" r=\"8\"/>", "split": "<path d=\"M16 3h5v5\"/><path d=\"M8 3H3v5\"/><path d=\"M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3\"/><path d=\"m15 9 6-6\"/>", "swap": "<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>", "rotate": "<path d=\"M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/>", "cloud": "<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>", "cloud-off": "<path d=\"M10.94 5.274A7 7 0 0 1 15.71 10h1.79a4.5 4.5 0 0 1 4.222 6.057\"/><path d=\"M18.796 18.81A4.5 4.5 0 0 1 17.5 19H9A7 7 0 0 1 5.79 5.78\"/><path d=\"m2 2 20 20\"/>", "refresh": "<path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M8 16H3v5\"/>", "logout": "<path d=\"m16 17 5-5-5-5\"/><path d=\"M21 12H9\"/><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"/>", "sheet": "<path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"/><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"/><path d=\"M8 13h2\"/><path d=\"M14 13h2\"/><path d=\"M8 17h2\"/><path d=\"M14 17h2\"/>", "skip": "<path d=\"M21 4v16\"/><path d=\"M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z\"/>"};
+const ICONS = {"cart": "<path d=\"m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18\"/><path d=\"M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25\"/><circle cx=\"18\" cy=\"20\" r=\"2\"/><circle cx=\"8\" cy=\"20\" r=\"2\"/>", "utensils": "<path d=\"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2\"/><path d=\"M7 2v20\"/><path d=\"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7\"/>", "film": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M7 3v18\"/><path d=\"M3 7.5h4\"/><path d=\"M3 12h18\"/><path d=\"M3 16.5h4\"/><path d=\"M17 3v18\"/><path d=\"M17 7.5h4\"/><path d=\"M17 16.5h4\"/>", "fuel": "<path d=\"M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5\"/><path d=\"M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16\"/><path d=\"M2 21h13\"/><path d=\"M3 9h11\"/>", "bag": "<path d=\"M16 10a4 4 0 0 1-8 0\"/><path d=\"M3.103 6.034h17.794\"/><path d=\"M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z\"/>", "grid": "<rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/>", "coffee": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "house": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>", "car": "<path d=\"M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/>", "gamepad": "<line x1=\"6\" x2=\"10\" y1=\"11\" y2=\"11\"/><line x1=\"8\" x2=\"8\" y1=\"9\" y2=\"13\"/><line x1=\"15\" x2=\"15.01\" y1=\"12\" y2=\"12\"/><line x1=\"18\" x2=\"18.01\" y1=\"10\" y2=\"10\"/><path d=\"M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z\"/>", "plane": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "gift": "<path d=\"M12 7v14\"/><path d=\"M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8\"/><path d=\"M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5\"/><rect x=\"3\" y=\"7\" width=\"18\" height=\"4\" rx=\"1\"/>", "heart": "<path d=\"M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5\"/>", "dumbbell": "<path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"/><path d=\"m2.5 21.5 1.4-1.4\"/><path d=\"m20.1 3.9 1.4-1.4\"/><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"/><path d=\"m9.6 14.4 4.8-4.8\"/>", "book": "<path d=\"M12 5v16\"/><path d=\"M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z\"/>", "paw": "<circle cx=\"11\" cy=\"4\" r=\"2\"/><circle cx=\"18\" cy=\"8\" r=\"2\"/><circle cx=\"20\" cy=\"16\" r=\"2\"/><path d=\"M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z\"/>", "shirt": "<path d=\"M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z\"/>", "music": "<path d=\"M9 18V5l12-2v13\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><circle cx=\"18\" cy=\"16\" r=\"3\"/>", "card": "<rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><line x1=\"2\" x2=\"22\" y1=\"10\" y2=\"10\"/><path d=\"M6 14h2\"/>", "wrench": "<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z\"/>", "medical": "<path d=\"M12 11v4\"/><path d=\"M14 13h-4\"/><path d=\"M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2\"/><path d=\"M18 6v14\"/><path d=\"M6 6v14\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/>", "sparkles": "<path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"/><path d=\"M20 2v4\"/><path d=\"M22 4h-4\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/>", "ticket": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "zap": "<path d=\"M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z\"/>", "plus": "<path d=\"M5 12h14\"/><path d=\"M12 5v14\"/>", "pie": "<path d=\"M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z\"/><path d=\"M21.21 15.89A10 10 0 1 1 8 2.83\"/>", "list": "<path d=\"M3 5h.01\"/><path d=\"M3 12h.01\"/><path d=\"M3 19h.01\"/><path d=\"M8 5h13\"/><path d=\"M8 12h13\"/><path d=\"M8 19h13\"/>", "bars": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "settings": "<path d=\"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "repeat": "<path d=\"m17 2 4 4-4 4\"/><path d=\"M3 11v-1a4 4 0 0 1 4-4h14\"/><path d=\"m7 22-4-4 4-4\"/><path d=\"M21 13v1a4 4 0 0 1-4 4H3\"/>", "right": "<path d=\"m9 18 6-6-6-6\"/>", "left": "<path d=\"m15 18-6-6 6-6\"/>", "up": "<path d=\"m18 15-6-6-6 6\"/>", "down": "<path d=\"m6 9 6 6 6-6\"/>", "check": "<path d=\"M20 6 9 17l-5-5\"/>", "ok": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m16 9-5.5 5.5L8 12\"/>", "alert": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\"/><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\"/>", "stop": "<path d=\"m15 9-6 6\"/><path d=\"M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z\"/><path d=\"m9 9 6 6\"/>", "x": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "download": "<path d=\"M12 15V3\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/>", "upload": "<path d=\"M12 3v12\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/>", "help": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3\"/><path d=\"M12 17h.01\"/>", "target": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/>", "calculator": "<rect width=\"16\" height=\"20\" x=\"4\" y=\"2\" rx=\"2\"/><line x1=\"8\" x2=\"16\" y1=\"6\" y2=\"6\"/><line x1=\"16\" x2=\"16\" y1=\"14\" y2=\"18\"/><path d=\"M16 10h.01\"/><path d=\"M12 10h.01\"/><path d=\"M8 10h.01\"/><path d=\"M12 14h.01\"/><path d=\"M8 14h.01\"/><path d=\"M12 18h.01\"/><path d=\"M8 18h.01\"/>", "search": "<path d=\"m21 21-4.34-4.34\"/><circle cx=\"11\" cy=\"11\" r=\"8\"/>", "split": "<path d=\"M16 3h5v5\"/><path d=\"M8 3H3v5\"/><path d=\"M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3\"/><path d=\"m15 9 6-6\"/>", "swap": "<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>", "rotate": "<path d=\"M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/>", "cloud": "<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>", "cloud-off": "<path d=\"M10.94 5.274A7 7 0 0 1 15.71 10h1.79a4.5 4.5 0 0 1 4.222 6.057\"/><path d=\"M18.796 18.81A4.5 4.5 0 0 1 17.5 19H9A7 7 0 0 1 5.79 5.78\"/><path d=\"m2 2 20 20\"/>", "refresh": "<path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M8 16H3v5\"/>", "logout": "<path d=\"m16 17 5-5-5-5\"/><path d=\"M21 12H9\"/><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"/>", "sheet": "<path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"/><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"/><path d=\"M8 13h2\"/><path d=\"M14 13h2\"/><path d=\"M8 17h2\"/><path d=\"M14 17h2\"/>", "skip": "<path d=\"M21 4v16\"/><path d=\"M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z\"/>", "share": "<path d=\"M12 2v13\"/><path d=\"m16 6-4-4-4 4\"/><path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"/>"};
 const FIREBASE_CONFIG = {"apiKey":"AIzaSyC6UKIh9r9hvetFo-jAkOj9pXVKyYQJXWI","authDomain":"tally-e419b.firebaseapp.com","projectId":"tally-e419b","storageBucket":"tally-e419b.firebasestorage.app","messagingSenderId":"397263107109","appId":"1:397263107109:web:47b05d0a13c3ccda503bcc"};
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const SCHEMA = 2;
 
 // =====================================================================
@@ -298,6 +328,11 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now().t
 const sum = (list, f) => list.reduce((a, x) => a + f(x), 0);
 const clamp01 = v => (Number.isFinite(v) ? Math.min(Math.max(v, 0), 1) : 0);
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k);
+
+// ---------- Device ----------
+const IOS_DEVICE = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IOS_APP = IOS_DEVICE && (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches);
+const CAN_SHARE_FILES = (() => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.csv', { type: 'text/csv' })] })); } catch (e) { return false; } })();
 
 // ---------- Dates (date-only strings, calendar math in UTC so DST never shifts a day) ----------
 const pad = n => String(n).padStart(2, '0');
@@ -366,7 +401,8 @@ function freshState() {
     const id = uid();
     categories[id] = { id, name, icon: ic, color, order: i, archived: false, rollover: false, rolloverFrom: null, limit, createdMonth: null, updatedAt: stamp };
   });
-  return { settings: { id: 'settings', schema: SCHEMA, defaultBudget: 80000, trackingStart: t, updatedAt: stamp }, categories, plans: {}, recurring: {}, entries: {} };
+  return { settings: { id: 'settings', schema: SCHEMA, defaultBudget: 80000, trackingStart: t, setupDone: false, lastReviewAt: null, updatedAt: stamp },
+    categories, plans: {}, goals: {}, recurring: {}, entries: {} };
 }
 
 // Cleans any loaded or restored data. Returns the state plus a count of records that had to be dropped.
@@ -379,6 +415,7 @@ function normalizeState(d, opts) {
     id: 'settings', schema: SCHEMA,
     defaultBudget: Number.isInteger(settingsIn.defaultBudget) && settingsIn.defaultBudget > 0 ? settingsIn.defaultBudget : 80000,
     trackingStart: isDate(settingsIn.trackingStart) ? settingsIn.trackingStart : today(),
+    setupDone: settingsIn.setupDone !== false, lastReviewAt: isDate(settingsIn.lastReviewAt) ? settingsIn.lastReviewAt : null,
     updatedAt: settingsIn.updatedAt || 0
   };
   const categories = {};
@@ -397,7 +434,20 @@ function normalizeState(d, opts) {
     if (!isMonth(m) || !p || !Number.isInteger(p.total) || p.total < 0) { dropped.plans++; continue; }
     const limits = {};
     for (const [k, v] of Object.entries(p.limits || {})) if (v === null || (Number.isInteger(v) && v >= 0)) limits[k] = v;
-    plans[m] = { month: m, total: p.total, limits, moves: Array.isArray(p.moves) ? p.moves.slice(-200) : [], legacyLimits: !!p.legacyLimits, updatedAt: p.updatedAt || 0 };
+    const goalAmts = {};
+    for (const [k, v] of Object.entries(p.goals || {})) if (Number.isInteger(v) && v >= 0) goalAmts[k] = v;
+    plans[m] = { month: m, total: p.total, limits, goals: goalAmts, moves: Array.isArray(p.moves) ? p.moves.slice(-200) : [], legacyLimits: !!p.legacyLimits, updatedAt: p.updatedAt || 0 };
+  }
+  const goals = {};
+  for (const [id, g] of Object.entries(src.goals || {})) {
+    if (!g || typeof g.name !== 'string' || !g.name.trim() || !Number.isInteger(g.target) || g.target <= 0 || g.target > MAX_CENTS || !isMonth(g.startMonth)) { dropped.goals = (dropped.goals || 0) + 1; continue; }
+    goals[id] = {
+      id, name: g.name.trim().slice(0, 40), target: g.target, targetDate: isDate(g.targetDate) ? g.targetDate : null, startMonth: g.startMonth,
+      startAmount: Number.isInteger(g.startAmount) && g.startAmount >= 0 ? g.startAmount : 0,
+      monthly: Number.isInteger(g.monthly) && g.monthly >= 0 ? g.monthly : 0,
+      color: /^#[0-9A-Fa-f]{6}$/.test(g.color) ? g.color : '#17A2A2', archivedMonth: isMonth(g.archivedMonth) ? g.archivedMonth : null,
+      order: Number.isFinite(g.order) ? g.order : 99, updatedAt: g.updatedAt || 0
+    };
   }
   const recurring = {};
   for (const [id, r] of Object.entries(src.recurring || {})) {
@@ -425,11 +475,11 @@ function normalizeState(d, opts) {
       id, type: e.type === 'refund' ? 'refund' : 'expense', date: e.date, amount: e.amount,
       parts: parts.map(p => ({ categoryId: p.categoryId, amount: p.amount })),
       note: String(e.note || '').slice(0, 120), recurringId: typeof e.recurringId === 'string' ? e.recurringId : null,
-      ts: Number(e.ts) || 0, updatedAt: e.updatedAt || 0
+      goalId: typeof e.goalId === 'string' ? e.goalId : null, ts: Number(e.ts) || 0, updatedAt: e.updatedAt || 0
     };
   }
   if (!Object.keys(categories).length && opts.fill !== false) Object.assign(categories, freshState().categories);
-  return { state: { settings, categories, plans, recurring, entries }, dropped };
+  return { state: { settings, categories, plans, goals, recurring, entries }, dropped };
 }
 
 // Converts the first web version's data. Past months' category limits were never saved by that version,
@@ -468,7 +518,7 @@ function migrateV1(d) {
     for (const c of Object.values(categories)) limits[c.id] = c.limit;
     plans[m] = { month: m, total: total(m), limits, moves: [], legacyLimits: m < cm, updatedAt: stamp };
   }
-  const settings = { id: 'settings', defaultBudget: cents(d.monthlyBudget || 800), trackingStart, updatedAt: stamp };
+  const settings = { id: 'settings', defaultBudget: cents(d.monthlyBudget || 800), trackingStart, setupDone: true, updatedAt: stamp };
   return normalizeState({ settings, categories, plans, recurring, entries }).state;
 }
 
@@ -494,7 +544,7 @@ const persist = () => { if (!disk.set(K2, JSON.stringify(S))) toast('Could not s
 // =====================================================================
 // Writing (every change goes through here so it is saved locally and synced)
 // =====================================================================
-const COLS = ['meta', 'categories', 'plans', 'recurring', 'entries'];
+const COLS = ['meta', 'categories', 'plans', 'goals', 'recurring', 'entries'];
 let calcVersion = 0;
 const keyOf = (col, o) => (col === 'plans' ? o.month : col === 'meta' ? 'settings' : o.id);
 function put(col, obj) {
@@ -533,7 +583,7 @@ function monthNet(M) {
   return cached('net' + M, () => {
     let expenses = 0, refunds = 0, count = 0; const byCat = {};
     for (const e of allEntries()) {
-      if (monthOf(e.date) !== M) continue;
+      if (monthOf(e.date) !== M || e.goalId) continue; // money paid from a savings goal doesn't count against the month
       count++;
       if (e.type === 'refund') refunds += e.amount; else expenses += e.amount;
       for (const p of e.parts) byCat[p.categoryId] = (byCat[p.categoryId] || 0) + sign(e) * p.amount;
@@ -546,8 +596,8 @@ function monthNet(M) {
 function planFor(M) {
   if (S.plans[M]) return Object.assign({ own: true }, S.plans[M]);
   const earlier = Object.keys(S.plans).filter(k => k < M).sort().pop();
-  if (earlier) { const p = S.plans[earlier]; return { month: M, total: p.total, limits: Object.assign({}, p.limits), moves: [], own: false, from: earlier }; }
-  return { month: M, total: S.settings.defaultBudget, limits: {}, moves: [], own: false, from: null };
+  if (earlier) { const p = S.plans[earlier]; return { month: M, total: p.total, limits: Object.assign({}, p.limits), goals: Object.assign({}, p.goals), moves: [], own: false, from: earlier }; }
+  return { month: M, total: S.settings.defaultBudget, limits: {}, goals: {}, moves: [], own: false, from: null };
 }
 function limitIn(plan, cat) {
   if (has(plan.limits, cat.id)) return plan.limits[cat.id];
@@ -555,9 +605,10 @@ function limitIn(plan, cat) {
   return cat.limit == null ? null : cat.limit;
 }
 function resolvedPlan(M) {
-  const p = planFor(M), limits = {};
+  const p = planFor(M), limits = {}, goals = {};
   for (const c of catList()) limits[c.id] = limitIn(p, c);
-  return { month: M, total: p.total, limits, moves: p.moves || [], legacyLimits: !!p.legacyLimits };
+  for (const g of Object.values(S.goals)) goals[g.id] = goalPlanned(p, g);
+  return { month: M, total: p.total, limits, goals, moves: p.moves || [], legacyLimits: !!p.legacyLimits };
 }
 // Saves explicit plans for every earlier month so a change never rewrites the past.
 function freezeBefore(M) {
@@ -565,17 +616,57 @@ function freezeBefore(M) {
   for (const m of monthRange(start, prevMonth(M))) {
     if (!S.plans[m]) put('plans', resolvedPlan(m));
     else {
-      const p = S.plans[m], missing = catList().filter(c => !has(p.limits, c.id));
-      if (missing.length) { const r = resolvedPlan(m); put('plans', Object.assign({}, p, { limits: r.limits })); }
+      const p = S.plans[m];
+      const missing = catList().some(c => !has(p.limits, c.id)) || Object.values(S.goals).some(g => !has(p.goals, g.id));
+      if (missing) { const r = resolvedPlan(m); put('plans', Object.assign({}, p, { limits: r.limits, goals: r.goals })); }
     }
   }
 }
 function editPlan(M, change) {
   freezeBefore(M);
   const p = S.plans[M] ? JSON.parse(JSON.stringify(S.plans[M])) : resolvedPlan(M);
+  p.goals = p.goals || {};
   for (const c of catList()) if (!has(p.limits, c.id)) p.limits[c.id] = limitIn(planFor(M), c);
+  for (const g of Object.values(S.goals)) if (!has(p.goals, g.id)) p.goals[g.id] = goalPlanned(planFor(M), g);
   change(p);
   put('plans', p);
+}
+
+// ---------- Savings goals ----------
+// Each month a goal sets aside its monthly amount from the allowance, until the target is reached.
+const goalList = () => Object.values(S.goals).sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+const activeGoals = () => goalList().filter(g => !g.archivedMonth || g.archivedMonth > curMonth());
+function goalPlanned(plan, g) {
+  if (plan.month < g.startMonth) return 0;
+  if (g.archivedMonth && plan.month >= g.archivedMonth) return 0;
+  if (has(plan.goals, g.id)) return plan.goals[g.id];
+  return g.monthly;
+}
+function goalSetAside(g, M) {
+  if (!g || M < g.startMonth) return 0;
+  return cached(`ga|${g.id}|${M}`, () => {
+    let saved = g.startAmount, amt = 0;
+    for (const m of monthRange(g.startMonth, M)) {
+      amt = Math.max(0, Math.min(goalPlanned(planFor(m), g), g.target - saved));
+      saved += amt;
+    }
+    return amt;
+  });
+}
+const goalsTotal = M => sum(Object.values(S.goals), g => goalSetAside(g, M));
+function goalStatus(g) {
+  return cached('gs|' + g.id, () => {
+    const cur = curMonth();
+    const before = g.startAmount + sum(monthRange(g.startMonth, prevMonth(cur)), m => goalSetAside(g, m));
+    const contributed = before + goalSetAside(g, cur);
+    const used = sum(allEntries().filter(e => e.goalId === g.id), e => sign(e) * e.amount);
+    const months = g.targetDate ? monthRange(cur > g.startMonth ? cur : g.startMonth, monthOf(g.targetDate)).length : 0;
+    const suggested = months > 0 ? Math.ceil(Math.max(0, g.target - before) / months / 100) * 100 : null;
+    let projected = contributed;
+    if (g.targetDate) for (const m of monthRange(nextMonth(cur), monthOf(g.targetDate))) projected += Math.max(0, Math.min(goalPlanned(planFor(m), g), g.target - projected));
+    return { contributed, used, saved: contributed - used, remaining: Math.max(0, g.target - contributed), reached: contributed >= g.target,
+      thisMonth: goalSetAside(g, cur), months, suggested, onTrack: !g.targetDate || projected >= g.target };
+  });
 }
 
 function catState(cat, M) {
@@ -691,13 +782,13 @@ function summary(M) {
   const plan = planFor(M), n = monthNet(M), cur = curMonth();
   const isCur = M === cur, dayCount = daysIn(M);
   const day = isCur ? nums(today())[2] : (M < cur ? dayCount : 0);
-  const P = plan.total, A = P - n.net;
+  const P = plan.total, G = goalsTotal(M), spendable = P - G, A = spendable - n.net;
   const upcoming = isCur ? upcomingIn(M) : [];
   const U = sum(upcoming, o => o.amount), Q = A - U;
   const daysLeft = Math.max(dayCount - day + 1, 1);
   const perDay = Math.floor(Math.max(Q, 0) / daysLeft);
-  const expected = Math.round(P * day / dayCount), under = expected - n.net;
-  const status = n.net > P ? 'bad' : (isCur && under < 0 ? 'warn' : 'good');
+  const expected = Math.round(spendable * day / dayCount), under = expected - n.net;
+  const status = n.net > spendable ? 'bad' : (isCur && under < 0 ? 'warn' : 'good');
   let headline;
   if (status === 'bad') headline = 'Over budget';
   else if (status === 'warn') headline = `${whole(-under)} over pace`;
@@ -708,8 +799,8 @@ function summary(M) {
   else if (Q < 0) detail = `Your upcoming recurring payments are ${money(-Q)} more than what's left.`;
   else if (daysLeft === 1) detail = `Last day of the month, with ${money(Q)} free to spend.`;
   else detail = `About ${floorWhole(perDay)} a day keeps you on budget for the ${daysLeft} days left.`;
-  return { M, plan, n, isCur, day, dayCount, P, A, U, Q, upcoming, daysLeft, perDay, status, headline, detail,
-    fracSpent: P > 0 ? n.net / P : (n.net > 0 ? 1 : 0), fracElapsed: day / dayCount };
+  return { M, plan, n, isCur, day, dayCount, P, G, spendable, A, U, Q, upcoming, daysLeft, perDay, status, headline, detail, expected,
+    fracSpent: spendable > 0 ? n.net / spendable : (n.net > 0 ? 1 : 0), fracElapsed: day / dayCount };
 }
 
 function trackingStartMonth() { return monthOf(S.settings.trackingStart); }
@@ -732,19 +823,22 @@ const TABS = [['overview', 'Overview', 'pie'], ['spending', 'Spending', 'list'],
 let renderQueued = false;
 function scheduleRender() { if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; render(); }); }
 function render() {
+  const setup = !S.settings.setupDone;
+  $('#tabs').hidden = setup;
   $('#tabs').innerHTML = TABS.map(([id, label, ic]) =>
     `<button data-act="tab" data-tab="${id}" ${ui.tab === id ? 'aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></button>`).join('');
   // Keep focus and cursor position in a field that is being typed in.
   const active = document.activeElement;
   const keep = active && active.id && $('#view').contains(active) ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;
   let html;
-  if (ui.tab === 'overview') html = viewOverview();
+  if (setup) html = viewSetup();
+  else if (ui.tab === 'overview') html = ui.page && ui.page.review ? viewReview() : viewOverview();
   else if (ui.tab === 'spending') html = viewSpending();
   else if (ui.tab === 'plan') html = viewPlan();
   else if (ui.tab === 'history') html = ui.page ? viewMonth(ui.page.month) : viewHistory();
   else html = viewSettings();
   const view = $('#view');
-  view.className = ui.tab === 'overview' ? 'wide' : '';
+  view.className = ui.tab === 'overview' && !setup && !ui.page ? 'wide' : '';
   view.innerHTML = html;
   if (keep) {
     const el = document.getElementById(keep.id);
@@ -781,6 +875,7 @@ function summaryCard(s) {
   const left = s.A;
   const calcRows = [
     `<div class="kv"><span>${esc(monthShort(s.M))} allowance</span><span class="num">${money(s.P)}</span></div>`,
+    s.G ? `<div class="kv"><span>Set aside for savings goals</span><span class="num">−${money(s.G)}</span></div>` : '',
     `<div class="kv"><span>Spending (${s.n.count - countRefunds(s.M)} ${s.n.count - countRefunds(s.M) === 1 ? 'entry' : 'entries'})</span><span class="num">−${money(s.n.expenses)}</span></div>`,
     s.n.refunds ? `<div class="kv"><span>Refunds</span><span class="num pos">+${money(s.n.refunds)}</span></div>` : '',
     `<div class="kv tot"><span>Left this month</span><span class="num">${money(left)}</span></div>`,
@@ -798,7 +893,8 @@ function summaryCard(s) {
       <div class="track"><div class="fillbar" style="width:${clamp01(s.fracSpent) * 100}%;background:var(--${s.status})"></div></div>
       ${s.isCur ? `<div class="tick" style="left:${clamp01(s.fracElapsed) * 100}%"></div>` : ''}
     </div>
-    <div class="split muted foot num"><span>${money(s.n.net)} of ${whole(s.P)} spent</span>${s.isCur ? `<span>Day ${s.day} of ${s.dayCount}</span>` : ''}</div>
+    <div class="split muted foot num"><span>${money(s.n.net)} of ${whole(s.spendable)} spent</span>${s.isCur ? `<span>Day ${s.day} of ${s.dayCount}</span>` : ''}</div>
+    ${s.G ? `<div class="muted foot num">${money(s.G)} of your ${whole(s.P)} allowance is set aside for savings goals.</div>` : ''}
     ${s.U > 0 ? `<hr class="rule"><div class="kv"><span>Upcoming recurring</span><span class="num">−${money(s.U)}</span></div>
       <div class="kv"><b>Free to spend</b><b class="num ${s.Q < 0 ? 'neg' : ''}">${money(s.Q)}</b></div>` : ''}
     <hr class="rule">
@@ -850,9 +946,13 @@ function viewOverview() {
       ${summaryCard(s)}
       <div class="btn-col">
         <button class="primary" data-act="add">${icon('plus')}<span>Add spending</span></button>
-        <button class="secondary" data-act="afford">${icon('calculator')}<span>Can I afford this?</span></button>
+        <div class="btn-pair">
+          <button class="secondary" data-act="afford">${icon('calculator')}<span>Can I afford this?</span></button>
+          <button class="secondary" data-act="open-review">${icon('check')}<span>Weekly review</span></button>
+        </div>
       </div>
       ${backupNudge()}
+      ${paceCard(s)}
     </div><div>
       <section class="card"><h2>Where it went</h2>
         ${s.n.net > 0 ? donut(rows) : '<div class="muted small">Nothing spent yet this month.</div>'}
@@ -871,7 +971,8 @@ function entryRow(e, catFilter) {
   const first = catFor(e.parts[0].categoryId);
   const isSplit = e.parts.length > 1;
   const catNames = e.parts.map(p => catFor(p.categoryId).name).join(' + ');
-  const sub = [e.note ? catNames : (isSplit ? catNames : ''), e.type === 'refund' ? 'Refund' : ''].filter(Boolean).join(' · ');
+  const goal = e.goalId ? S.goals[e.goalId] : null;
+  const sub = [e.note ? catNames : (isSplit ? catNames : ''), e.type === 'refund' ? 'Refund' : '', goal ? `Paid from ${goal.name}` : ''].filter(Boolean).join(' · ');
   let partNote = '';
   if (catFilter && isSplit) { const p = e.parts.find(x => x.categoryId === catFilter); if (p) partNote = ` · ${money(p.amount)} in ${esc(catFor(catFilter).name)}`; }
   const ic = isSplit ? `<span class="cat-ic m" style="background:var(--fg2)">${icon('split')}</span>` : catIcon(first, 'm');
@@ -923,6 +1024,7 @@ function viewSpending() {
       ${filtered ? '<button data-act="clear-filters">Clear</button>' : ''}
     </div>
     <div class="result-line num" role="status">${list.length} ${list.length === 1 ? 'entry' : 'entries'} · ${net < 0 ? '+' : ''}${money(Math.abs(net))} ${net < 0 ? 'back' : 'spent'}${catFilter ? ` in ${esc(catFor(catFilter).name)}` : ''}</div>
+    ${list.length ? `<div class="export-row"><span class="muted">Export ${filtered ? 'these entries' : "this month's entries"} as CSV</span>${exportButtons('view')}</div>` : ''}
     ${list.length ? entrySections(list, catFilter) : `<div class="empty"><b>${filtered ? 'No matches' : 'No spending yet'}</b><span>${filtered ? 'Try a different search or clear the filters.' : 'Tap + to add what you spend.'}</span></div>`}`;
 }
 
@@ -933,7 +1035,8 @@ function viewPlan() {
   const minM = trackingStartMonth() < cur ? trackingStartMonth() : cur;
   let maxM = cur; for (let i = 0; i < 12; i++) maxM = nextMonth(maxM);
   const assigned = sum(cats, c => catState(c, M).limit || 0);
-  const diff = plan.total - assigned;
+  const G = goalsTotal(M), diff = plan.total - G - assigned;
+  const goals = goalList().filter(g => g.startMonth <= M && (!g.archivedMonth || g.archivedMonth > M));
   let scopeNote = '';
   if (M < cur) scopeNote = `This is a past month. Changes here affect ${monthTitle(M)} only.`;
   else if (!plan.own && plan.from) scopeNote = `Using ${monthTitle(plan.from)}'s plan. Changes here apply from ${monthTitle(M)} on.`;
@@ -945,9 +1048,10 @@ function viewPlan() {
       <b>${esc(monthTitle(M))}</b><button class="round-btn" data-act="plan-month" data-dir="1" aria-label="Next month" ${M >= maxM ? 'disabled' : ''}>${icon('right')}</button></div>
     <div class="section"><div class="group">
       <button class="row" data-act="edit-total"><span class="grow"><div>Monthly allowance</div></span><span class="amt num"><b>${money(plan.total)}</b></span><span class="chev">${icon('right')}</span></button>
+      ${G ? `<div class="row"><span class="grow"><div>Set aside for savings goals</div></span><span class="val num">${money(G)}</span></div>` : ''}
       <div class="row"><span class="grow"><div>Assigned to categories</div></span><span class="val num">${money(assigned)}</span></div>
       <div class="row"><span class="grow"><div>${diff >= 0 ? 'Not assigned' : 'Over-assigned'}</div></span><span class="num ${diff < 0 ? 'neg' : 'val'}">${money(Math.abs(diff))}</span></div>
-    </div><div class="sec-foot">${diff < 0 ? `Category limits add up to ${money(diff * -1)} more than your allowance. Lower a limit or raise the allowance; moving money between categories won't close this gap. ` : ''}${esc(scopeNote)}</div></div>
+    </div><div class="sec-foot">${diff < 0 ? `Category limits${G ? ' and goals' : ''} add up to ${money(diff * -1)} more than your allowance. Lower a limit or raise the allowance; moving money between categories won't close this gap. ` : ''}${esc(scopeNote)}</div></div>
 
     <div class="section"><div class="sec-head"><span>Categories</span>${cats.length > 1 ? `<button data-act="toggle-reorder">${ui.reorder ? 'Done' : 'Reorder'}</button>` : ''}</div>
     <div class="group">
@@ -966,6 +1070,12 @@ function viewPlan() {
     </div></div>
     <button class="secondary" data-act="move-money" ${cats.length < 2 ? 'disabled' : ''}>${icon('swap')}<span>Move money between categories</span></button>
 
+    <div class="section"><div class="sec-head"><span>Savings goals</span>${G ? `<span class="num">${money(G)} this month</span>` : ''}</div>
+    <div class="group">
+      ${goals.map(g => goalRow(g, M)).join('')}
+      <button class="row link" data-act="new-goal">${icon('plus')}<span>Add savings goal</span></button>
+    </div><div class="sec-foot">Goal money is set aside from your allowance each month, so it lowers Free to spend. When you spend it, choose "Paid from" that goal so it doesn't count against your monthly budget.</div></div>
+
     <div class="section"><div class="sec-head"><span>Recurring payments</span>${recs.length ? `<span class="num">≈ ${money(sum(recs.filter(r => !r.paused), perMonth))}/mo</span>` : ''}</div>
     <div class="group">
       ${recs.map(r => { const next = r.paused ? null : nextDates(r, 1)[0]; const c = catFor(r.categoryId);
@@ -982,13 +1092,14 @@ function viewHistory() {
   const full = fullMonths();
   const average = full.length ? Math.round(sum(full, m => monthNet(m).net) / full.length) : null;
   const H = 190 - 22 - 22;
-  const top = Math.max(...recent.map(m => Math.max(monthNet(m).net, planFor(m).total)), 100) * 1.1;
+  const spendableIn = m => planFor(m).total - goalsTotal(m);
+  const top = Math.max(...recent.map(m => Math.max(monthNet(m).net, spendableIn(m))), 100) * 1.1;
   const chart = `<div class="bars">${recent.map(m => {
-      const v = monthNet(m).net, b = planFor(m).total;
+      const v = monthNet(m).net, b = spendableIn(m);
       return `<div class="col" title="${esc(monthTitle(m))}: ${money(v)} of ${money(b)}">
         <div class="goal" style="bottom:${(b / top) * H + 22}px"></div>
         <div class="bar ${v > b ? 'over' : ''}" style="height:${Math.max(v, 0) / top * H}px"></div><div class="lab">${esc(monthShort(m))}</div></div>`; }).join('')}
-    </div><div class="legend"><span><i></i>Spent</span><span><i class="o"></i>Over budget</span><span><i class="g"></i>Allowance</span></div>`;
+    </div><div class="legend"><span><i></i>Spent</span><span><i class="o"></i>Over budget</span><span><i class="g"></i>Spending allowance</span></div>`;
   let catAvg = '';
   if (full.length) {
     const sums = {};
@@ -999,6 +1110,8 @@ function viewHistory() {
   }
   return `<div class="title-row"><h1>History</h1></div>
     <div class="section"><div class="sec-head"><span>Monthly spending</span></div><div class="card">${chart}</div></div>
+    ${trendsCard()}
+    ${bvaCard()}
     <div class="section"><div class="sec-head"><span>Averages</span></div><div class="group">
       <div class="row"><span class="grow"><div>This month so far</div></span><span class="val num">${money(monthNet(cur).net)}</span></div>
       ${average != null ? `<div class="row"><span class="grow"><div>Monthly average</div></span><span class="val num">${money(average)}</span></div>` : ''}
@@ -1007,7 +1120,7 @@ function viewHistory() {
       : `Average of ${full.length} full ${full.length === 1 ? 'month' : 'months'}. The month in progress${isPartialMonth(trackingStartMonth()) ? ' and your partial first month are' : ' is'} left out.`}</div></div>
     ${catAvg}
     <div class="section"><div class="sec-head"><span>Months</span></div><div class="group">
-      ${months.map(m => { const v = monthNet(m).net, diff = planFor(m).total - v;
+      ${months.map(m => { const v = monthNet(m).net, diff = spendableIn(m) - v;
         const sub = m === cur ? 'In progress' : (diff >= 0 ? `${money(diff)} under budget` : `${money(-diff)} over budget`);
         return `<button class="row" data-act="open-month" data-month="${m}">
           <span class="grow"><div>${esc(monthTitle(m))}${isPartialMonth(m) ? ' <span class="badge">Partial</span>' : ''}</div><div class="foot ${m !== cur && diff < 0 ? 's-bad' : 'muted'}">${esc(sub)}</div></span>
@@ -1022,12 +1135,165 @@ function viewMonth(M) {
       <div class="row"><span class="grow"><div>Spent</div></span><span class="val num">${money(s.n.expenses)}</span></div>
       ${s.n.refunds ? `<div class="row"><span class="grow"><div>Refunds</div></span><span class="num pos">+${money(s.n.refunds)}</span></div>` : ''}
       <div class="row"><span class="grow"><div>Allowance</div></span><span class="val num">${money(s.P)}</span></div>
+      ${s.G ? `<div class="row"><span class="grow"><div>Set aside for savings goals</div></span><span class="val num">−${money(s.G)}</span></div>` : ''}
       <div class="row ${s.A < 0 ? 's-bad' : ''}"><span class="grow"><div>${s.A < 0 ? 'Over budget by' : (s.isCur ? 'Left' : 'Under budget by')}</div></span><span class="num">${money(Math.abs(s.A))}</span></div>
     </div>
     ${isPartialMonth(M) ? `<div class="sec-foot">Tracking started ${esc(shortDate(S.settings.trackingStart))}, so this month is partial.</div>` : ''}
     ${s.n.net > 0 || rows.length ? `<section class="card"><h2>By category</h2>${s.n.net > 0 ? donut(rows) : ''}${rows.map(r => catLine(r, M, true)).join('')}</section>` : ''}
     ${entrySections(list, null)}`;
 }
+
+// ---------- Daily pace chart ----------
+function paceCard(s) {
+  if (!s.isCur || s.spendable <= 0) return '';
+  const M = s.M, days = s.dayCount, d0 = s.day;
+  const daily = new Array(days + 1).fill(0);
+  for (const e of allEntries()) { if (monthOf(e.date) === M && !e.goalId) daily[nums(e.date)[2]] += sign(e) * e.amount; }
+  const cum = [0]; for (let d = 1; d <= d0; d++) cum.push(cum[d - 1] + daily[d]);
+  const W = 340, H = 156, L = 46, R = 12, T = 12, B = 24, pw = W - L - R, ph = H - T - B;
+  const top = Math.max(s.spendable, ...cum, 100) * 1.08;
+  const x = d => (L + d / days * pw).toFixed(1), y = v => (T + ph - Math.max(v, 0) / top * ph).toFixed(1);
+  const pts = cum.map((v, d) => `${x(d)},${y(v)}`).join(' ');
+  const color = s.status === 'good' ? 'var(--accent)' : `var(--${s.status})`;
+  const last = cum[d0], mid = Math.round(days / 2);
+  return `<section class="card pace"><h2>Daily pace</h2>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Spending so far this month: ${money(last)} by day ${d0}, compared with an even pace of ${money(s.expected)}">
+      <line x1="${L}" y1="${y(s.spendable)}" x2="${W - R}" y2="${y(s.spendable)}" class="gridline"/>
+      <line x1="${L}" y1="${y(0)}" x2="${W - R}" y2="${y(0)}" class="axis"/>
+      <text x="${L - 6}" y="${y(s.spendable)}" class="lbl" text-anchor="end" dominant-baseline="middle">${whole(s.spendable)}</text>
+      <text x="${L - 6}" y="${y(0)}" class="lbl" text-anchor="end" dominant-baseline="middle">$0</text>
+      <line x1="${x(0)}" y1="${y(0)}" x2="${x(days)}" y2="${y(s.spendable)}" class="paceline"/>
+      <polygon points="${x(0)},${y(0)} ${pts} ${x(d0)},${y(0)}" style="fill:${color}" opacity="0.13"/>
+      <polyline points="${pts}" fill="none" style="stroke:${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${x(d0)}" cy="${y(last)}" r="4" style="fill:${color}"/>
+      <text x="${x(1)}" y="${H - 6}" class="lbl" text-anchor="start">${esc(monthShort(M))} 1</text>
+      <text x="${x(mid)}" y="${H - 6}" class="lbl" text-anchor="middle">${mid}</text>
+      <text x="${x(days)}" y="${H - 6}" class="lbl" text-anchor="end">${days}</text>
+    </svg>
+    <div class="legend"><span><i style="background:${color}"></i>Spent so far</span><span><i class="g"></i>Even pace</span></div>
+    <div class="muted small num">By today you've spent ${money(last)}. Spending evenly, you'd be at ${money(s.expected)}.</div>
+  </section>`;
+}
+
+// ---------- Savings goal row ----------
+function goalRow(g, M) {
+  const st = goalStatus(g), thisM = goalSetAside(g, M);
+  const parts = [`${money(st.contributed)} of ${whole(g.target)} set aside`];
+  if (!st.reached) parts.push(`${whole(thisM)} in ${monthShort(M)}`);
+  if (g.targetDate) parts.push(`by ${shortDate(g.targetDate)}`);
+  if (st.used) parts.push(`${money(st.used)} spent from it`);
+  const warn = !st.reached && g.targetDate && !st.onTrack ? (st.suggested ? `Set aside ${whole(st.suggested)} a month to reach it by ${shortDate(g.targetDate)}.` : 'The target date has passed.') : '';
+  return `<button class="row with-icon" data-act="edit-goal" data-id="${esc(g.id)}"><span class="cat-ic s" style="background:${esc(g.color)}">${icon('target')}</span>
+    <span class="grow"><div>${esc(g.name)}${st.reached ? ' <span class="badge">Reached</span>' : ''}</div>
+      <div class="thin goalbar"><div style="width:${clamp01(st.contributed / g.target) * 100}%;background:${esc(g.color)}"></div></div>
+      <div class="muted foot num">${esc(parts.join(' · '))}</div>${warn ? `<div class="foot s-warn">${esc(warn)}</div>` : ''}</span>
+    <span class="chev">${icon('right')}</span></button>`;
+}
+
+// ---------- History: category trends and budget vs actual ----------
+function trendsCard() {
+  const cats = activeCats();
+  if (!cats.length) return '';
+  const id = ui.trendCat && S.categories[ui.trendCat] ? ui.trendCat : cats[0].id, c = catFor(id);
+  const cur = curMonth(); let start = cur; for (let i = 0; i < 11; i++) start = prevMonth(start);
+  const first = [trackingStartMonth(), ...allEntries().map(e => monthOf(e.date))].sort()[0];
+  if (start < first) start = first;
+  const vals = monthRange(start, cur).map(m => ({ m, v: monthNet(m).byCat[id] || 0, lim: catState(c, m).limit }));
+  const H = 146, top = Math.max(...vals.map(x => Math.max(x.v, x.lim || 0)), 100) * 1.1;
+  const full = fullMonths().filter(m => m >= start);
+  const avg = full.length ? Math.round(sum(full, m => monthNet(m).byCat[id] || 0) / full.length) : null;
+  const curV = vals[vals.length - 1].v;
+  return `<div class="section"><div class="sec-head"><span>Category trends</span></div><div class="card">
+    <select id="trend-cat" data-trend class="pick" aria-label="Category">${catList().filter(x => !x.archived || x.id === id).map(x => `<option value="${esc(x.id)}" ${x.id === id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+    <div class="bars ${vals.length > 7 ? 'tight' : ''}">${vals.map(x => `<div class="col" title="${esc(monthTitle(x.m))}: ${money(x.v)}${x.lim != null ? ` of ${money(x.lim)}` : ''}">
+        ${x.lim != null ? `<div class="goal" style="bottom:${(x.lim / top) * H + 22}px"></div>` : ''}
+        <div class="bar ${x.lim != null && x.v > x.lim ? 'over' : ''}" style="height:${Math.max(x.v, 0) / top * H}px;${x.lim != null && x.v > x.lim ? '' : `background:${esc(c.color)}`}"></div><div class="lab">${esc(monthShort(x.m))}</div></div>`).join('')}</div>
+    <div class="legend"><span><i style="background:${esc(c.color)}"></i>Spent</span><span><i class="o"></i>Over limit</span><span><i class="g"></i>Limit</span></div>
+    <div class="muted small num">${avg != null ? `${esc(c.name)} averages ${money(avg)} a month over ${full.length} full ${full.length === 1 ? 'month' : 'months'}. This month so far: ${money(curV)}.` : `This month so far: ${money(curV)}. A monthly average appears after your first full month.`}</div>
+  </div></div>`;
+}
+function bvaCard() {
+  const months = monthsWithData();
+  const M = ui.bvaMonth && months.includes(ui.bvaMonth) ? ui.bvaMonth : curMonth();
+  const rows = catList().map(c => ({ c, st: catState(c, M) })).filter(x => (!x.c.archived && x.st.hasBudget) || x.st.spent !== 0);
+  const limited = rows.filter(x => x.st.hasBudget);
+  const totLimit = sum(limited, x => (x.st.limit || 0) + x.st.carry), totSpent = sum(limited, x => x.st.spent);
+  return `<div class="section"><div class="sec-head"><span>Budget vs. actual</span></div><div class="card">
+    <select id="bva-month" data-bva class="pick" aria-label="Month">${months.map(m => `<option value="${m}" ${m === M ? 'selected' : ''}>${esc(monthTitle(m))}</option>`).join('')}</select>
+    ${rows.length ? rows.map(({ c, st }) => {
+      const pool = (st.limit || 0) + st.carry, over = st.hasBudget && st.available < 0;
+      return `<div class="bva"><div class="bva-top">${catIcon(c, 's')}<span class="name">${esc(c.name)}</span>
+        <span class="num ${over ? 'neg' : 'muted'}">${st.hasBudget ? (over ? `${money(-st.available)} over` : `${money(st.available)} left`) : 'No limit'}</span></div>
+        ${st.hasBudget ? `<div class="thin"><div style="width:${clamp01(pool > 0 ? st.spent / pool : 1) * 100}%;background:${over ? 'var(--bad)' : esc(c.color)}"></div></div>` : ''}
+        <div class="muted foot num">Spent ${money(st.spent)}${st.hasBudget ? ` of ${money(pool)}${st.carry ? ` (limit ${money(st.limit || 0)}, ${st.carry > 0 ? '+' : '−'}${money(Math.abs(st.carry))} carried)` : ''}` : ''}</div></div>`;
+    }).join('') : '<div class="muted small">No limits or spending this month.</div>'}
+    ${limited.length ? `<div class="kv tot"><span>Categories with limits</span><span class="num">${money(totSpent)} of ${money(totLimit)}</span></div>` : ''}
+  </div></div>`;
+}
+
+// ---------- Weekly review ----------
+function viewReview() {
+  const t = today(), from = addDays(t, -6), M = curMonth(), s = summary(M);
+  const week = allEntries().filter(e => e.date >= from && e.date <= t);
+  const spent = sum(week.filter(e => !e.goalId), e => sign(e) * e.amount);
+  const weekPace = Math.round(s.spendable / s.dayCount * 7);
+  const auto = week.filter(e => e.recurringId);
+  const big = week.filter(e => e.type === 'expense' && !e.recurringId).sort((a, b) => b.amount - a.amount).slice(0, 3);
+  const next = [];
+  for (const r of Object.values(S.recurring)) {
+    if (r.paused) continue;
+    for (const d of occurrences(r, addDays(t, 1), addDays(t, 7))) if (!S.entries[occurrenceId(r, d)]) next.push({ r, d });
+  }
+  next.sort((a, b) => (a.d < b.d ? -1 : 1));
+  const over = activeCats().map(c => ({ c, st: catState(c, M) })).filter(x => x.st.hasBudget && x.st.available < 0);
+  const goals = activeGoals(), last = S.settings.lastReviewAt;
+  const sec = (title, body, foot) => `<div class="section"><div class="sec-head"><span>${title}</span></div>${body}${foot ? `<div class="sec-foot">${foot}</div>` : ''}</div>`;
+  const none = msg => `<div class="group"><div class="row muted">${msg}</div></div>`;
+  const ahead = spent > weekPace;
+  return `<div><button class="back" data-act="back">${icon('left')}<span>Overview</span></button>
+      <div class="title-row"><h1>Weekly review</h1></div>
+      <div class="muted small">${esc(shortDate(from))} – ${esc(shortDate(t))}${last ? ` · last reviewed ${esc(shortDate(last))}` : ''}</div></div>
+    <section class="card">
+      <div class="kv"><span>Spent in the last 7 days</span><b class="num">${money(spent)}</b></div>
+      <div class="kv"><span>An even week would be</span><span class="num">${money(weekPace)}</span></div>
+      <div class="status s-${ahead ? 'warn' : 'good'}">${icon(ahead ? 'alert' : 'ok')}<span>${ahead ? `${money(spent - weekPace)} more than an even week` : `${money(weekPace - spent)} under an even week`}</span></div>
+      <div class="muted small">${esc(s.detail)}</div>
+    </section>
+    ${sec('Check these', auto.length || big.length ? `<div class="group">${[...auto, ...big].map(e => entryRow(e)).join('')}</div>` : none('Nothing to check this week.'),
+      auto.length ? 'Payments Tally added for you use the scheduled amount. Tap one to fix it if the real charge was different.' : (big.length ? 'Your biggest purchases this week. Tap one to fix the amount or category.' : ''))}
+    ${sec('Coming up in the next 7 days', next.length ? `<div class="group">${next.map(o => `<button class="row with-icon" data-act="edit-rec" data-id="${esc(o.r.id)}">${catIcon(catFor(o.r.categoryId), 's')}
+        <span class="grow"><div>${esc(o.r.name)}</div><div class="muted foot">${esc(dayTitle(o.d))}</div></span><span class="amt num">${money(o.r.amount)}</span></button>`).join('')}</div>` : none('No recurring payments due.'))}
+    ${sec('Over the limit', over.length ? `<div class="group">${over.map(x => `<div class="row with-icon">${catIcon(x.c, 's')}
+        <span class="grow"><div>${esc(x.c.name)}</div><div class="foot s-bad num">${money(-x.st.available)} over</div></span>
+        <button class="pill" data-act="cover" data-id="${esc(x.c.id)}">Cover it</button></div>`).join('')}</div>` : none('Every category is within its limit.'),
+      over.length ? (s.A < 0 ? "You're also over your whole allowance, and moving money between categories can't fix that part. Spend less for the rest of the month or raise the allowance on the Plan tab." : 'Cover it moves money from another category to this one.') : '')}
+    ${goals.length ? sec('Savings goals', `<div class="group">${goals.map(g => goalRow(g, M)).join('')}</div>`) : ''}
+    <button class="primary" data-act="finish-review">${icon('check')}<span>Done reviewing</span></button>`;
+}
+
+// ---------- First-time setup ----------
+function viewSetup() {
+  const st = ui.setup || (ui.setup = { amount: '', newName: '', error: '',
+    cats: DEFAULT_CATS.map(([name, ic, color, limit]) => ({ name, icon: ic, color, on: true, limit: editable(limit) })) });
+  const synced = FIREBASE_CONFIG || window.__TALLY_TEST_CONFIG__;
+  return `<div class="title-row"><h1>Welcome to Tally</h1></div>
+    <div class="muted">Set up your monthly budget. You can change all of this later on the Plan tab.</div>
+    <div class="section"><div class="sec-head"><span>Monthly allowance</span></div>
+      <div class="group"><label class="amount"><span>$</span><input id="su-amount" data-su="amount" type="text" inputmode="decimal" placeholder="800" autocomplete="off" value="${esc(st.amount)}" aria-label="Monthly allowance"></label></div>
+      <div class="sec-foot">What you plan to spend each month on day-to-day things like food, fun and gas. Leave out rent and bills you don't want to track.</div></div>
+    <div class="section"><div class="sec-head"><span>Categories and limits</span></div><div class="group">
+      ${st.cats.map((c, i) => `<div class="row with-icon">${catIcon(c, 's')}<span class="grow"><div>${esc(c.name)}</div></span>
+        <span class="muted" ${c.on ? '' : 'hidden'}>$</span><input class="right num" type="text" inputmode="decimal" id="su-lim-${i}" data-su-cat="${i}" data-su-f="limit" value="${esc(c.limit)}" placeholder="No limit" aria-label="${esc(c.name)} limit" style="width:68px" ${c.on ? '' : 'hidden'}>
+        <input class="switch" type="checkbox" role="switch" id="su-on-${i}" data-su-cat="${i}" data-su-f="on" ${c.on ? 'checked' : ''} aria-label="Use ${esc(c.name)}"></div>`).join('')}
+      <div class="row"><input class="wide" id="su-new" data-su="newName" type="text" placeholder="Add your own category" value="${esc(st.newName)}" maxlength="40" autocomplete="off" aria-label="New category name"><button class="pill" data-act="setup-add">Add</button></div>
+    </div><div class="sec-foot">Limits are optional. Switch off any categories you don't need.</div></div>
+    ${st.error ? `<div class="err" role="alert">${esc(st.error)}</div>` : ''}
+    <button class="primary" data-act="setup-finish">${icon('check')}<span>Start using Tally</span></button>
+    ${synced ? `<div class="sec-foot" style="margin-top:8px">Already use Tally on another device? Sign in below and your spending will load.</div>${viewAccount()}` : ''}`;
+}
+
+// ---------- Export buttons ----------
+const exportButtons = scope => `<span class="pills"><button class="pill" data-act="csv-download" data-scope="${scope}">${icon('download')}<span>Download</span></button>${CAN_SHARE_FILES ? `<button class="pill" data-act="csv-share" data-scope="${scope}">${icon('share')}<span>Share</span></button>` : ''}</span>`;
 
 // ---------- Settings ----------
 function viewSettings() {
@@ -1041,8 +1307,8 @@ function viewSettings() {
     <div class="section"><div class="sec-head"><span>Backup and export</span></div><div class="group">
       <button class="row link" data-act="export">${icon('download')}<span>Save a backup file</span></button>
       <button class="row link" data-act="import">${icon('upload')}<span>Restore from a backup file</span></button>
-      <button class="row link" data-act="csv">${icon('sheet')}<span>Export spending as CSV</span></button>
-    </div><div class="sec-foot">${esc(backupLine)} ${sync.user ? 'Sync keeps a copy in your account too, but a backup file is still a good safety net.' : 'Without sync, your spending is stored only on this device, and removing Tally from the Home Screen erases it.'} The CSV opens in Excel or Numbers; use the backup file to restore Tally.${storageOK ? '' : ' <b class="s-bad">Saving is not working in this browser right now.</b>'}</div></div>
+      <div class="row stack"><span style="color:var(--accent);font-size:20px">${icon('sheet')}</span><span class="grow"><div>Spending as a spreadsheet (CSV)</div><div class="muted foot">Every entry, for Excel, Numbers or Google Sheets</div></span>${exportButtons('all')}</div>
+    </div><div class="sec-foot">${esc(backupLine)} ${sync.user ? 'Sync keeps a copy in your account too, but a backup file is still a good safety net.' : 'Without sync, your spending is stored only on this device, and removing Tally from the Home Screen erases it.'} Use the backup file to restore Tally; the CSV is for looking at your spending in a spreadsheet.${IOS_APP ? ' On iPhone, Download opens a menu: choose Save to Files.' : ''}${storageOK ? '' : ' <b class="s-bad">Saving is not working in this browser right now.</b>'}</div></div>
     ${arch.length ? `<div class="section"><div class="sec-head"><span>Archived categories</span></div><div class="group">
       ${arch.map(c => `<div class="row with-icon">${catIcon(c, 's')}<span class="grow"><div>${esc(c.name)}</div></span><button style="color:var(--accent)" data-act="restore-cat" data-id="${esc(c.id)}">Restore</button></div>`).join('')}
     </div><div class="sec-foot">Archived categories keep their history but don't appear when adding spending.</div></div>` : ''}
@@ -1114,6 +1380,7 @@ function renderSheet(first) {
   else if (sh.kind === 'move') html = sheetMove(sh, d);
   else if (sh.kind === 'total') html = sheetTotal(sh, d);
   else if (sh.kind === 'recurring') html = sheetRecurring(sh, d);
+  else if (sh.kind === 'goal') html = sheetGoal(sh, d);
   else if (sh.kind === 'restore') html = sheetRestore(sh);
   else if (sh.kind === 'syncchoice') html = sheetSyncChoice(sh);
   el.innerHTML = html;
@@ -1128,8 +1395,40 @@ function renderSheet(first) {
 // ---------- Entry (add / edit spending) ----------
 function entryDraft(e, preset) {
   if (e) return { type: e.type, amount: editable(e.amount), categoryId: e.parts.length === 1 ? e.parts[0].categoryId : null,
-    split: e.parts.length > 1, parts: e.parts.map(p => ({ categoryId: p.categoryId, amount: editable(p.amount) })), note: e.note, date: e.date, repeat: 'none' };
-  return Object.assign({ type: 'expense', amount: '', categoryId: null, split: false, parts: [], note: '', date: today(), repeat: 'none' }, preset || {});
+    split: e.parts.length > 1, parts: e.parts.map(p => ({ categoryId: p.categoryId, amount: editable(p.amount) })), note: e.note, date: e.date, repeat: 'none',
+    goalId: e.goalId || '', catTouched: true };
+  return Object.assign({ type: 'expense', amount: '', categoryId: null, split: false, parts: [], note: '', date: today(), repeat: 'none', goalId: '', catTouched: false }, preset || {});
+}
+// Past purchases that are quick to repeat: one category, not added by a schedule, newest first.
+function recentTemplates() {
+  return cached('recent', () => {
+    const seen = new Set(), out = [];
+    for (const e of allEntries()) {
+      if (e.type !== 'expense' || e.recurringId || e.parts.length !== 1 || !S.categories[e.parts[0].categoryId] || S.categories[e.parts[0].categoryId].archived) continue;
+      const key = `${e.note.trim().toLowerCase()}|${e.parts[0].categoryId}|${e.amount}`;
+      if (seen.has(key)) continue;
+      seen.add(key); out.push({ note: e.note, categoryId: e.parts[0].categoryId, amount: e.amount });
+      if (out.length >= 8) break;
+    }
+    return out;
+  });
+}
+// The category last used with each note, for suggestions while typing.
+function noteIndex() {
+  return cached('notes', () => {
+    const map = new Map();
+    for (const e of allEntries()) {
+      const k = e.note.trim().toLowerCase();
+      if (!k || e.parts.length !== 1) continue;
+      const hit = map.get(k);
+      if (hit) hit.count++; else map.set(k, { note: e.note.trim(), categoryId: e.parts[0].categoryId, count: 1 });
+    }
+    return map;
+  });
+}
+function suggestFor(note) {
+  const hit = noteIndex().get(String(note || '').trim().toLowerCase());
+  return hit && S.categories[hit.categoryId] && !S.categories[hit.categoryId].archived ? hit : null;
 }
 function sheetEntry(sh, d) {
   const e = sh.item;
@@ -1153,18 +1452,29 @@ function sheetEntry(sh, d) {
     : (!refund && !d.split ? `<div class="section"><div class="group"><label class="row"><span class="grow"><div>Repeat</div></span><select ${field(d.repeat, 'repeat')} aria-label="Repeat">
         ${[['none', "Doesn't repeat"], ['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Monthly'], ['yearly', 'Yearly']].map(([v, l]) => `<option value="${v}" ${d.repeat === v ? 'selected' : ''}>${l}</option>`).join('')}
       </select></label></div><div class="sec-foot" id="repeat-note"></div></div>` : '');
+  const recents = !e && !refund ? recentTemplates() : [];
+  const notes = [...noteIndex().values()].sort((a, b) => b.count - a.count).slice(0, 60);
+  const goals = goalList().filter(g => (!g.archivedMonth || g.archivedMonth > curMonth()) || g.id === d.goalId);
   return shell(e ? (refund ? 'Edit refund' : 'Edit spending') : (refund ? 'Add refund' : 'Add spending'), 'Save', `
+    ${recents.length ? `<div class="section"><div class="sec-head"><span>Repeat a recent purchase</span></div><div class="recent-row">
+      ${recents.map((x, i) => `<button class="recent" data-act="use-recent" data-i="${i}" aria-label="${esc(x.note || catFor(x.categoryId).name)}, ${money(x.amount)}"><b class="num">${money(x.amount)}</b><span>${esc(x.note || catFor(x.categoryId).name)}</span></button>`).join('')}
+    </div></div>` : ''}
     <div class="seg" role="radiogroup" aria-label="Type">
       <button role="radio" data-act="set-type" data-type="expense" aria-checked="${!refund}">Expense</button>
       <button role="radio" data-act="set-type" data-type="refund" aria-checked="${refund}">Refund</button>
     </div>
     <div class="section"><div class="group"><label class="amount ${refund ? 'refund' : ''}"><span>${refund ? '+$' : '$'}</span><input type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="${refund ? 'Refund amount' : 'Amount'}" ${field(d.amount, 'amount')} data-autofocus aria-describedby="err-amount"></label></div>
       <div class="err" id="err-amount" role="alert"></div>${refund ? '<div class="sec-foot">A refund lowers that category\'s spending on the date you got the money back. Keep the original purchase as it is.</div>' : ''}</div>
+    <div class="section"><div class="group">
+      <label class="row"><input class="wide" type="text" list="note-list" placeholder="${refund ? 'Note, such as the store' : 'Note, such as the store (optional)'}" autocomplete="off" aria-label="Note" ${field(d.note, 'note')}></label>
+    </div><div class="suggest" id="note-hint" aria-live="polite"></div>
+    <datalist id="note-list">${notes.map(n => `<option value="${esc(n.note)}"></option>`).join('')}</datalist></div>
     ${catBlock}
     <div class="section"><div class="group">
-      <label class="row"><input class="wide" type="text" placeholder="${refund ? 'Note, such as the store' : 'Note (optional)'}" autocomplete="off" aria-label="Note" ${field(d.note, 'note')}></label>
       <label class="row"><span class="grow"><div>Date</div></span><input type="date" max="${today()}" ${field(d.date, 'date')} aria-describedby="err-date"></label>
-    </div><div class="err" id="err-date" role="alert"></div></div>
+      ${goals.length ? `<label class="row"><span class="grow"><div>Paid from</div></span><select ${field(d.goalId, 'goalId')} aria-label="Paid from">
+        <option value="" ${!d.goalId ? 'selected' : ''}>Monthly budget</option>${goals.map(g => `<option value="${esc(g.id)}" ${g.id === d.goalId ? 'selected' : ''}>${esc(g.name)} (goal)</option>`).join('')}</select></label>` : ''}
+    </div><div class="err" id="err-date" role="alert"></div><div class="sec-foot" id="goal-note"></div></div>
     ${repeatBlock}
     ${e ? `<div class="group"><button class="row danger" data-act="delete-entry">Delete</button></div>` : ''}`);
 }
@@ -1207,7 +1517,7 @@ function affordResult(d) {
   const daysLeft = s.daysLeft, perDayAfter = Math.floor(Math.max(freeAfter, 0) / daysLeft);
   const catAfter = st && st.hasBudget ? st.available - x : null;
   let verdict, kind;
-  if (leftAfter < 0) { kind = 'bad'; verdict = `This would put you ${money(-leftAfter)} over your ${whole(s.P)} allowance.`; }
+  if (leftAfter < 0) { kind = 'bad'; verdict = `This would put you ${money(-leftAfter)} over your ${whole(s.spendable)} spending allowance.`; }
   else if (freeAfter < 0) { kind = 'warn'; verdict = `It fits what's left, but leaves ${money(-freeAfter)} too little for your upcoming recurring payments.`; }
   else if (catAfter != null && catAfter < 0) { kind = 'warn'; verdict = `It fits your month, but puts ${esc(cat.name)} ${money(-catAfter)} over its limit.`; }
   else { kind = 'good'; verdict = 'Yes, this fits your plan.'; }
@@ -1350,6 +1660,63 @@ function recurringPreview(sh, d) {
   return { errs, preview };
 }
 
+// ---------- Savings goal ----------
+function goalDraft(g) {
+  if (g) return { name: g.name, target: editable(g.target), hasDate: !!g.targetDate, targetDate: g.targetDate || '', start: g.startAmount ? editable(g.startAmount) : '',
+    monthly: editable(goalPlanned(planFor(curMonth()), g)) };
+  return { name: '', target: '', hasDate: true, targetDate: '', start: '', monthly: '' };
+}
+function sheetGoal(sh, d) {
+  const g = sh.id ? S.goals[sh.id] : null, st = g ? goalStatus(g) : null;
+  const money0 = (v, name, ph, label) => `<label class="row"><span class="grow"><div>${label}</div></span><span class="muted">$</span><input class="right num" type="text" inputmode="decimal" placeholder="${ph}" aria-label="${label}" ${field(v, name)}></label>`;
+  return shell(g ? 'Savings goal' : 'New savings goal', g ? 'Save' : 'Add', `
+    ${g ? `<div class="card">
+      <div class="kv"><span>Set aside so far</span><b class="num">${money(st.contributed)}</b></div>
+      ${st.used ? `<div class="kv"><span>Spent from it</span><span class="num">−${money(st.used)}</span></div><div class="kv"><span>Still available</span><span class="num">${money(st.saved)}</span></div>` : ''}
+      <div class="kv"><span>${st.reached ? 'Target reached' : 'Left to set aside'}</span><span class="num">${st.reached ? money(g.target) : money(st.remaining)}</span></div>
+      <div class="thin"><div style="width:${clamp01(st.contributed / g.target) * 100}%;background:${esc(g.color)}"></div></div>
+    </div>` : ''}
+    <div class="group">
+      <label class="row"><input class="wide" type="text" placeholder="Name, such as Spring trip" autocomplete="off" maxlength="40" aria-label="Goal name" ${field(d.name, 'name')} data-autofocus></label>
+      ${money0(d.target, 'target', '600', 'Target amount')}
+    </div><div class="err" id="err-gtarget" role="alert"></div>
+    <div class="section"><div class="group">
+      <label class="row"><span class="grow"><div>Target date</div></span><input class="switch" type="checkbox" role="switch" data-field="hasDate" id="s-hasDate" ${d.hasDate ? 'checked' : ''}></label>
+      <label class="row" ${d.hasDate ? '' : 'hidden'} id="gdate-row"><span class="grow"><div>Reach it by</div></span><input type="date" ${field(d.targetDate, 'targetDate')}></label>
+      ${money0(d.start, 'start', '0', g ? 'Saved before you started' : 'Already saved')}
+    </div><div class="err" id="err-gdate" role="alert"></div><div class="err" id="err-gstart" role="alert"></div></div>
+    <div class="section"><div class="group">${money0(d.monthly, 'monthly', '0', 'Set aside each month')}</div>
+      <div class="err" id="err-gmonthly" role="alert"></div><div class="sec-foot" id="goal-suggest"></div></div>
+    ${g ? `<div class="section"><div class="group"><button class="row danger" data-act="delete-goal">Delete goal</button></div>
+      <div class="sec-foot">Stops setting money aside from now on. Months already set aside stay in your history.</div></div>` : ''}`);
+}
+function goalPreview(sh, d) {
+  const errs = {}, g = sh.id ? S.goals[sh.id] : null, cur = curMonth();
+  const t = parseCents(d.target), st0 = d.start ? parseCents(d.start) : { cents: 0 }, m0 = d.monthly ? parseCents(d.monthly) : { cents: 0 };
+  if (d.target && t.error) errs.target = t.error;
+  if (d.start && st0.error) errs.start = st0.error;
+  if (d.monthly && m0.error) errs.monthly = m0.error;
+  if (d.hasDate && d.targetDate && (!isDate(d.targetDate) || monthOf(d.targetDate) < cur)) errs.date = 'Choose a date this month or later.';
+  const dr = $('#gdate-row'); if (dr) dr.hidden = !d.hasDate;
+  const target = t.cents || 0, start = st0.cents || 0, monthly = m0.cents || 0;
+  let before = start; // what will have been set aside before this month, using the numbers being edited
+  if (g) for (const m of monthRange(g.startMonth, prevMonth(cur))) before += Math.max(0, Math.min(goalPlanned(planFor(m), g), target - before));
+  let html = '';
+  if (target && !errs.start) {
+    const left = Math.max(0, target - before);
+    if (!left) html = 'This goal is already fully set aside.';
+    else if (d.hasDate && isDate(d.targetDate) && !errs.date) {
+      const months = monthRange(cur, monthOf(d.targetDate)).length;
+      const need = Math.ceil(left / months / 100) * 100;
+      html = `To reach ${money(target)} by ${esc(shortDate(d.targetDate))}, set aside ${money(need)} a month for ${months} ${months === 1 ? 'month' : 'months'}.
+        ${need !== monthly ? `<button class="pill" data-act="use-suggest" data-v="${editable(need)}">Use ${whole(need)} a month</button>` : ''}`;
+    } else if (monthly) html = `At ${money(monthly)} a month, you'll have it in about ${Math.ceil(left / monthly)} ${Math.ceil(left / monthly) === 1 ? 'month' : 'months'}.`;
+    if (monthly) html += ` <span class="muted">This lowers Free to spend by ${money(Math.min(monthly, left))} this month.</span>`;
+  }
+  const ok = !Object.keys(errs).length && d.name.trim() !== '' && target > 0 && (!d.hasDate || isDate(d.targetDate)) && start < target + 1;
+  return { errs, html, ok, target, start, monthly };
+}
+
 // ---------- Restore preview and sync choice ----------
 function sheetRestore(sh) {
   const st = sh.state, list = Object.values(st.entries).map(e => e.date).sort();
@@ -1363,6 +1730,7 @@ function sheetRestore(sh) {
       <div class="kv"><span>Categories</span><span class="num">${Object.keys(st.categories).length}</span></div>
       <div class="kv"><span>Recurring payments</span><span class="num">${Object.keys(st.recurring).length}</span></div>
       <div class="kv"><span>Monthly plans</span><span class="num">${Object.keys(st.plans).length}</span></div>
+      ${Object.keys(st.goals || {}).length ? `<div class="kv"><span>Savings goals</span><span class="num">${Object.keys(st.goals).length}</span></div>` : ''}
       ${sh.fromV1 ? '<div class="muted small">This backup is from the earlier version of Tally and will be converted.</div>' : ''}
       ${dropped ? `<div class="small s-warn">${dropped} ${dropped === 1 ? 'record was' : 'records were'} unreadable and will be left out.</div>` : ''}
     </div>
@@ -1389,6 +1757,8 @@ function validateSheet() {
     setErr('err-date', errs.date);
     const ss = $('#split-status'); if (ss) { ss.textContent = errs.split || 'Splits add up to the total.'; ss.className = 'sec-foot num' + (errs.split && d.amount ? ' s-warn' : ''); }
     ok = !Object.keys(errs).length;
+    const gn = $('#goal-note');
+    if (gn) gn.textContent = d.goalId && S.goals[d.goalId] ? `Comes out of the money set aside for ${S.goals[d.goalId].name}, so it won't count against this month's budget.` : '';
     const rn = $('#repeat-note');
     if (rn) rn.textContent = d.repeat === 'none' ? 'Choose a schedule for subscriptions and bills that repeat.'
       : `Tally will add this ${({ weekly: 'every week', biweekly: 'every 2 weeks', monthly: `on the ${ordinal(nums(isDate(d.date) ? d.date : today())[2])} of each month`, yearly: 'every year' })[d.repeat]} starting after ${isDate(d.date) ? shortDate(d.date) : 'this date'}. Manage it on the Plan tab.`;
@@ -1412,6 +1782,11 @@ function validateSheet() {
     const p = parseCents(d.amount);
     setErr('err-amount', d.amount ? p.error : '');
     ok = !!p.cents;
+  } else if (sh.kind === 'goal') {
+    const res = goalPreview(sh, d);
+    for (const k of ['target', 'start', 'monthly', 'date']) setErr('err-g' + k, res.errs[k]);
+    $('#goal-suggest').innerHTML = res.html;
+    ok = res.ok;
   } else if (sh.kind === 'recurring') {
     $('#day2-row').hidden = d.cadence !== 'twicemonthly';
     $('#end-row').hidden = !d.hasEnd;
@@ -1441,7 +1816,7 @@ function saveSheet() {
       put('recurring', r);
       recurringId = r.id; id = occurrenceId(r, d.date);
     }
-    put('entries', { id, type: d.type, date: d.date, amount: cents, parts, note: d.note.trim(), recurringId, ts: base ? base.ts : Date.now() });
+    put('entries', { id, type: d.type, date: d.date, amount: cents, parts, note: d.note.trim(), recurringId, goalId: d.goalId || null, ts: base ? base.ts : Date.now() });
     if (d.date < S.settings.trackingStart) put('meta', Object.assign({}, S.settings, { trackingStart: d.date }));
     toast(base ? 'Saved.' : (d.type === 'refund' ? 'Refund added.' : `Added ${money(cents)}.`));
   } else if (sh.kind === 'catplan') {
@@ -1477,6 +1852,18 @@ function saveSheet() {
     const r = draftToRecurring(d, base);
     if (base && base.paused && !r.paused) r.postedThrough = addDays(today(), -1); // don't backfill the paused stretch
     put('recurring', r);
+  } else if (sh.kind === 'goal') {
+    const res = goalPreview(sh, d); if (!res.ok) return;
+    const cur = curMonth(), base = sh.id ? S.goals[sh.id] : null;
+    const fields = { name: d.name.trim(), target: res.target, targetDate: d.hasDate ? d.targetDate : null, startAmount: res.start, monthly: res.monthly };
+    if (base) {
+      if (res.monthly !== goalPlanned(planFor(cur), base)) editPlan(cur, p => { p.goals[base.id] = res.monthly; });
+      put('goals', Object.assign({}, base, fields));
+    } else {
+      const order = Math.max(-1, ...goalList().map(g => g.order)) + 1;
+      put('goals', Object.assign({ id: uid(), startMonth: cur, color: PALETTE[(order + 5) % PALETTE.length][0], archivedMonth: null, order }, fields));
+    }
+    toast(base ? 'Goal saved.' : `Goal added. ${money(res.monthly)} a month is set aside from your allowance.`);
   } else if (sh.kind === 'restore') {
     applyRestore(sh.state);
   }
@@ -1511,18 +1898,41 @@ function csvCell(v) {
   if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = "'" + s; // stop spreadsheet formulas, keep negative numbers
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
-async function exportCSV() {
-  const rows = [['Date', 'Type', 'Amount', 'Category', 'Note', 'Split', 'Recurring', 'Entry ID']];
-  for (const e of allEntries().slice().reverse()) {
+function downloadFile(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement('a'); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+async function shareFile(name, text, type) {
+  try { await navigator.share({ files: [new File([text], name, { type })], title: name }); return true; }
+  catch (e) { if (!(e && e.name === 'AbortError')) toast("Couldn't open the share menu."); return false; }
+}
+const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+async function exportCSV(mode, scope) {
+  let list = allEntries(), name = `tally-spending-${today()}.csv`;
+  if (scope === 'view') {
+    const f = ui.filters, period = f.period === 'current' ? curMonth() : f.period === 'last' ? prevMonth(curMonth()) : f.period;
+    list = filteredEntries();
+    name = `tally-${period === 'all' ? 'all-time' : period}${f.cat !== 'all' ? '-' + slug(catFor(f.cat).name) : ''}${f.q ? '-search' : ''}.csv`;
+  }
+  const text = '\ufeff' + csvFor(list);
+  if (mode === 'share') { if (await shareFile(name, text, 'text/csv')) toast('Shared.'); return; }
+  if (IOS_APP && CAN_SHARE_FILES) { await shareFile(name, text, 'text/csv'); return; } // iPhone Home Screen apps save files through this menu
+  downloadFile(name, text, 'text/csv');
+  toast(`Downloaded ${name}. Refunds are negative amounts.`);
+}
+function csvFor(list) {
+  const rows = [['Date', 'Type', 'Amount', 'Category', 'Note', 'Split', 'Recurring', 'Paid from', 'Entry ID']];
+  for (const e of list.slice().reverse()) {
     for (const p of e.parts) {
       rows.push([e.date, e.type === 'refund' ? 'Refund' : 'Expense', ((e.type === 'refund' ? -1 : 1) * p.amount / 100).toFixed(2),
         catFor(p.categoryId).name, e.note, e.parts.length > 1 ? `${e.parts.length}-way split of ${(e.amount / 100).toFixed(2)}` : '',
-        e.recurringId && S.recurring[e.recurringId] ? S.recurring[e.recurringId].name : (e.recurringId ? 'Yes' : ''), e.id]);
+        e.recurringId && S.recurring[e.recurringId] ? S.recurring[e.recurringId].name : (e.recurringId ? 'Yes' : ''),
+        e.goalId ? (S.goals[e.goalId] ? `${S.goals[e.goalId].name} (goal)` : 'Savings goal') : 'Monthly budget', e.id]);
     }
   }
-  const text = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
-  const ok = await offerFile(`tally-spending-${today()}.csv`, '﻿' + text, 'text/csv');
-  if (ok) toast('CSV exported. Refunds are negative amounts.');
+  return rows.map(r => r.map(csvCell).join(',')).join('\r\n');
 }
 function readBackup(file) {
   if (file.size > 20 * 1024 * 1024) return toast('That file is too large to be a Tally backup.');
@@ -1623,7 +2033,7 @@ async function onAuthChange(user) {
   else openSheet({ kind: 'syncchoice', cloudData, draft: {} });
 }
 function stateFromCloud(c) {
-  return normalizeState({ settings: (c.meta || {}).settings || S.settings, categories: c.categories || {}, plans: c.plans || {}, recurring: c.recurring || {}, entries: c.entries || {} }).state;
+  return normalizeState({ settings: (c.meta || {}).settings || S.settings, categories: c.categories || {}, plans: c.plans || {}, goals: c.goals || {}, recurring: c.recurring || {}, entries: c.entries || {} }).state;
 }
 function adoptCloud(cloudData) {
   disk.set('tally-before-sync', JSON.stringify(S));
@@ -1637,7 +2047,8 @@ function combineWith(cloudData) {
   const remap = {}; for (const c of Object.values(L.categories)) { const hit = byName[c.name.trim().toLowerCase()]; if (hit && hit !== c.id) remap[c.id] = hit; }
   const rc = id => remap[id] || id;
   const out = { settings: newer(L.settings, C.settings), categories: Object.assign({}, C.categories), plans: Object.assign({}, C.plans),
-    recurring: Object.assign({}, C.recurring), entries: Object.assign({}, C.entries) };
+    goals: Object.assign({}, C.goals), recurring: Object.assign({}, C.recurring), entries: Object.assign({}, C.entries) };
+  for (const g of Object.values(L.goals || {})) out.goals[g.id] = newer(g, C.goals[g.id]);
   out.settings = Object.assign({}, out.settings, { trackingStart: [L.settings.trackingStart, C.settings.trackingStart].sort()[0] });
   for (const c of Object.values(L.categories)) if (!remap[c.id]) out.categories[c.id] = newer(c, C.categories[c.id]);
   for (const e of Object.values(L.entries)) out.entries[e.id] = newer(Object.assign({}, e, { parts: e.parts.map(p => ({ categoryId: rc(p.categoryId), amount: p.amount })) }), C.entries[e.id]);
@@ -1697,6 +2108,25 @@ async function authAction(kind) {
   a.busy = false; render();
 }
 
+function finishSetup() {
+  const st = ui.setup, a = parseCents(st.amount);
+  st.amount = (($('#su-amount') || {}).value) || st.amount;
+  const a2 = parseCents(st.amount);
+  if (!a2.cents) { st.error = a2.error || 'Enter your monthly allowance.'; return render(); }
+  const chosen = st.cats.filter(c => c.on);
+  if (!chosen.length) { st.error = 'Keep at least one category.'; return render(); }
+  const bad = chosen.find(c => c.limit && parseCents(c.limit).error);
+  if (bad) { st.error = `Check the limit for ${bad.name}: ${parseCents(bad.limit).error}`; return render(); }
+  for (const id of Object.keys(S.categories)) removeDoc('categories', id);
+  chosen.forEach((c, i) => put('categories', { id: uid(), name: c.name, icon: c.icon, color: c.color, order: i, archived: false, rollover: false, rolloverFrom: null,
+    limit: c.limit ? parseCents(c.limit).cents : null, createdMonth: null }));
+  put('meta', Object.assign({}, S.settings, { defaultBudget: a2.cents, trackingStart: today(), setupDone: true }));
+  editPlan(curMonth(), p => { p.total = a2.cents; });
+  ui.setup = null; ui.tab = 'overview'; ui.page = null;
+  render(); window.scrollTo(0, 0);
+  toast('All set. Add your first purchase.');
+}
+
 // =====================================================================
 // Toast
 // =====================================================================
@@ -1739,7 +2169,7 @@ document.addEventListener('click', ev => {
     case 'edit-entry': { const e = S.entries[id]; if (e) openSheet({ kind: 'entry', item: e, draft: entryDraft(e) }); break; }
     case 'set-type': d.type = t.dataset.type; if (d.type === 'refund') d.repeat = 'none'; renderSheet(); break;
     case 'pick-cat':
-      d.categoryId = id;
+      d.categoryId = id; d.catTouched = true; setErr('note-hint', '');
       $$('#sheet .chip').forEach(b => b.setAttribute('aria-checked', String(b.dataset.id === id)));
       validateSheet(); break;
     case 'split': {
@@ -1833,7 +2263,39 @@ document.addEventListener('click', ev => {
 
     case 'export': exportBackup(); break;
     case 'import': $('#restore-file').click(); break;
-    case 'csv': exportCSV(); break;
+    case 'csv-download': exportCSV('download', t.dataset.scope); break;
+    case 'csv-share': exportCSV('share', t.dataset.scope); break;
+    case 'use-recent': {
+      const x = recentTemplates()[Number(t.dataset.i)]; if (!x) break;
+      Object.assign(d, { type: 'expense', amount: editable(x.amount), note: x.note, categoryId: x.categoryId, split: false, parts: [], catTouched: true });
+      renderSheet(); break;
+    }
+    case 'open-review': ui.page = { review: true }; render(); window.scrollTo(0, 0); break;
+    case 'finish-review':
+      put('meta', Object.assign({}, S.settings, { lastReviewAt: today() }));
+      ui.page = null; render(); window.scrollTo(0, 0); toast('Week reviewed. Nice work.'); break;
+    case 'cover': {
+      const c = S.categories[id], st = catState(c, curMonth());
+      openSheet({ kind: 'move', month: curMonth(), draft: { amount: editable(Math.max(-st.available, 1)), from: '', to: id, note: 'Covered overspending' } }); break;
+    }
+    case 'new-goal': openSheet({ kind: 'goal', id: null, draft: goalDraft(null) }); break;
+    case 'edit-goal': { const g = S.goals[id]; if (g) openSheet({ kind: 'goal', id, draft: goalDraft(g) }); break; }
+    case 'use-suggest': d.monthly = t.dataset.v; { const el = $('#s-monthly'); if (el) el.value = d.monthly; } validateSheet(); break;
+    case 'delete-goal': {
+      const g = S.goals[sh.id], cur = curMonth();
+      const used = Object.values(S.entries).some(e => e.goalId === g.id) || g.startMonth < cur;
+      if (!confirm(used ? `Delete ${g.name}? Tally stops setting money aside for it. Past months keep what was set aside.` : `Delete ${g.name}?`)) break;
+      if (used) { freezeBefore(cur); put('goals', Object.assign({}, g, { archivedMonth: cur })); } else removeDoc('goals', g.id);
+      closeSheet(); render(); break;
+    }
+    case 'setup-add': {
+      const st = ui.setup, name = (($('#su-new') || {}).value || st.newName || '').trim();
+      if (!name) break;
+      if (st.cats.some(c => c.name.toLowerCase() === name.toLowerCase())) { st.error = `You already have ${name}.`; render(); break; }
+      st.cats.push({ name: name.slice(0, 40), icon: 'grid', color: PALETTE[st.cats.length % PALETTE.length][0], on: true, limit: '' });
+      st.newName = ''; st.error = ''; render(); break;
+    }
+    case 'setup-finish': finishSetup(); break;
     case 'sign-in': ev.preventDefault(); authAction('in'); break;
     case 'sign-up': authAction('up'); break;
     case 'reset-password': authAction('reset'); break;
@@ -1848,9 +2310,25 @@ function onFieldChange(ev) {
     const d = ui.sheet.draft;
     if (t.dataset.field) d[t.dataset.field] = t.type === 'checkbox' ? t.checked : t.value;
     if (t.dataset.part != null) d.parts[Number(t.dataset.part)][t.dataset.pf] = t.value;
+    if (ui.sheet.kind === 'entry' && t.dataset.field === 'note' && !d.catTouched && !d.split) {
+      const hit = suggestFor(d.note);
+      if (hit && hit.categoryId !== d.categoryId) {
+        d.categoryId = hit.categoryId;
+        $$('#sheet .chip').forEach(b => b.setAttribute('aria-checked', String(b.dataset.id === hit.categoryId)));
+      }
+      setErr('note-hint', hit ? `Category set to ${catFor(hit.categoryId).name}, like your past "${hit.note}" entries.` : '');
+    }
     validateSheet();
     return;
   }
+  if (t.dataset.su) { ui.setup[t.dataset.su] = t.value; return; }
+  if (t.dataset.suCat != null) {
+    const c = ui.setup.cats[Number(t.dataset.suCat)];
+    if (t.dataset.suF === 'on') { c.on = t.checked; render(); } else c.limit = t.value;
+    return;
+  }
+  if (t.id === 'trend-cat') { ui.trendCat = t.value; render(); return; }
+  if (t.id === 'bva-month') { ui.bvaMonth = t.value; render(); return; }
   if (t.dataset.filter) {
     const key = t.dataset.filter;
     ui.filters[key] = t.value;
