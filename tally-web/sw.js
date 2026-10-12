@@ -1,6 +1,6 @@
 // Lets Tally open with no connection. When online it always fetches the newest files first.
-const CACHE = 'tally-v1';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'];
+const CACHE = 'tally-v2';
+const FILES = ['./', 'index.html', 'cloud.js', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
 });
